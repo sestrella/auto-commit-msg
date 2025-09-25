@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   dotenv.enable = true;
@@ -11,9 +11,9 @@
 
   languages.go.enable = true;
 
-  git-hooks.hooks.autocommitmsg = {
+  git-hooks.hooks.auto-commit-msg = {
     enable = true;
-    entry = pkgs.lib.getExe (pkgs.callPackage ./default.nix { });
+    entry = lib.getExe (pkgs.callPackage ./default.nix { });
     stages = [ "prepare-commit-msg" ];
   };
 
