@@ -91,7 +91,7 @@ var rootCmd = &cobra.Command{
 		// }
 		gitDiff, err := exec.Command("git", "diff", "--cached").Output()
 		if err != nil {
-			panic(err)
+			cobra.CheckErr(err)
 		}
 
 		if len(gitDiff) == 0 {
