@@ -32,6 +32,20 @@ type Input struct {
 	Content string `json:"content"`
 }
 
+type CreatedResponse struct {
+	Output []Output `json:"output"`
+}
+
+type Output struct {
+	Type    string    `json:"type"`
+	Content []Content `json:"content"`
+}
+
+type Content struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
 func (transport OpenAITransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", transport.apiKey))
 	req.Header.Set("Content-Type", "application/json")
@@ -47,7 +61,7 @@ func newOpenAIClient(apiKey string) OpenAIClient {
 	return OpenAIClient{httpClient}
 }
 
-func (client OpenAIClient) createResponse(model string, input []Input) (map[string]any, error) {
+func (client OpenAIClient) createResponse(model string, input []Input) (*CreatedResponse, error) {
 	body, err := json.Marshal(CreateResponse{model, input})
 	if err != nil {
 		return nil, err
@@ -70,13 +84,13 @@ func (client OpenAIClient) createResponse(model string, input []Input) (map[stri
 		return nil, errors.New("TODO")
 	}
 
-	var data map[string]any
+	var data CreatedResponse
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	return &data, nil
 }
 
 var cfgFile string
@@ -118,8 +132,30 @@ var rootCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		}
 
-		// TODO: Create a response struct
-		commitMsg := res["output"].([]any)[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"].(string)
+		// TODO: Look for a library that provides high-order functions like find
+		var msgOutput *Output
+		for _, output := range res.Output {
+			if output.Type == "message" {
+				msgOutput = &output
+				break
+			}
+		}
+		if msgOutput == nil {
+			cobra.CheckErr(fmt.Sprintf("No output with type 'message' found in: %v", res))
+		}
+
+		var outTextContent *Content
+		for _, content := range msgOutput.Content {
+			if content.Type == "output_text" {
+				outTextContent = &content
+				break
+			}
+		}
+		if outTextContent == nil {
+			cobra.CheckErr(fmt.Sprintf("No content with type 'output_text' found in: %v", msgOutput))
+		}
+
+		commitMsg := outTextContent.Text
 		err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
 		if err != nil {
 			cobra.CheckErr(err)
