@@ -1,12 +1,80 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type OpenAIClient struct {
+	httpClient http.Client
+	baseUrl    string
+}
+
+type OpenAITransport struct {
+	base   http.RoundTripper
+	apiKey string
+}
+
+func (transport OpenAITransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", transport.apiKey))
+	req.Header.Set("Content-Type", "application/json")
+	return transport.base.RoundTrip(req)
+}
+
+func newOpenAIClient(apiKey string) OpenAIClient {
+	transport := OpenAITransport{
+		base:   http.DefaultTransport,
+		apiKey: apiKey,
+	}
+	httpClient := http.Client{Transport: transport}
+	return OpenAIClient{
+		httpClient: httpClient,
+		baseUrl:    "https://api.openai.com/v1",
+	}
+}
+
+func (client OpenAIClient) createResponse(model string, input []map[string]any) (map[string]any, error) {
+	body, err := json.Marshal(map[string]any{
+		"model": model,
+		"input": input,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.baseUrl, "/responses"), bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		fmt.Printf("%v\n", res)
+		// TODO: Extract error message from response
+		return nil, errors.New("TODO")
+	}
+
+	var data map[string]any
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
 
 var cfgFile string
 
@@ -14,15 +82,36 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "autocommitmsg",
 	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Run: func(cmd *cobra.Command, args []string) {
+		// var commitMsgFile = args[0]
+		// var commitSource string
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+		// if len(args) > 1 {
+		// 	commitSource = args[1]
+		// }
+		gitDiffCmd := exec.Command("git", "diff", "--cached")
+		gitDiffOut, err := gitDiffCmd.Output()
+		if err != nil {
+			panic(err)
+		}
+
+		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
+		res, err := client.createResponse("gpt-4-turbo", []map[string]any{
+			{
+				"role":    "developer",
+				"content": "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
+			},
+			{
+				"role":    "user",
+				"content": gitDiffOut,
+			},
+		})
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+
+		fmt.Printf("%v", res["output"].([]any)[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
