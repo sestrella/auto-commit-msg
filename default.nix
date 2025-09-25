@@ -5,4 +5,5 @@ pkgs.buildGoApplication {
   version = "0.1.0";
   src = ./.;
   modules = ./gomod2nix.toml;
+  meta.mainProgram = "autocommitmsg";
 }

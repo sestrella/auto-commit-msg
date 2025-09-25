@@ -11,15 +11,11 @@
 
   languages.go.enable = true;
 
-  git-hooks.hooks.autocommitmsg =
-    let
-      autocommitmsg = pkgs.callPackage ./default.nix { };
-    in
-    {
-      enable = true;
-      entry = "${autocommitmsg}/bin/autocommitmsg";
-      stages = [ "prepare-commit-msg" ];
-    };
+  git-hooks.hooks.autocommitmsg = {
+    enable = true;
+    entry = pkgs.lib.getExe (pkgs.callPackage ./default.nix { });
+    stages = [ "prepare-commit-msg" ];
+  };
 
   # See full reference at https://devenv.sh/reference/options/
 }
