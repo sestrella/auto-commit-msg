@@ -2,8 +2,10 @@
   description = "A very basic flake";
 
   inputs = {
-    gomod2nix.url = "github:nix-community/gomod2nix";
-    gomod2nix.inputs.nixpkgs.follows = "nixpkgs";
+    gomod2nix = {
+      url = "github:nix-community/gomod2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     systems.url = "github:nix-systems/default";
   };
