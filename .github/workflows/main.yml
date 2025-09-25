@@ -31,5 +31,5 @@ jobs:
         id: mktemp
       - run: nix flake init -t ${{ github.workspace }}
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
-      - run: devenv shell -- cat .pre-commit-config.yaml
+      - run: devenv shell -- ls -al
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
