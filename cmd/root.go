@@ -84,16 +84,6 @@ var rootCmd = &cobra.Command{
 	Short: "A brief description of your application",
 	Run: func(cmd *cobra.Command, args []string) {
 		var commitMsgFile = args[0]
-		var commitSource string
-
-		if len(args) > 1 {
-			commitSource = args[1]
-		}
-
-		if commitSource != "" {
-			os.WriteFile(commitMsgFile, []byte(commitSource), 0644)
-			return
-		}
 
 		gitDiff, err := exec.Command("git", "diff", "--cached").Output()
 		if err != nil {
