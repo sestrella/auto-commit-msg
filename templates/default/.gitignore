@@ -8,8 +8,5 @@ devenv.local.nix
 # pre-commit
 .pre-commit-config.yaml
 
-# Project specific
+# dotenv
 .env
-autocommitmsg
-result
-templates/*/devenv.lock

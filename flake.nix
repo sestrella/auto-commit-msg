@@ -38,5 +38,10 @@
       overlays.default = final: prev: {
         autocommitmsg = self.packages.${prev.system}.default;
       };
+
+      templates.default = {
+        description = "";
+        path = ./templates/default;
+      };
     };
 }

@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
+inputs:
+  autocommitmsg:
+    url: github:sestrella/auto-commit-msg
+    overlays: [default]
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
