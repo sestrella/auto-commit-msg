@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -100,21 +101,37 @@ var rootCmd = &cobra.Command{
 	Use:   "autocommitmsg",
 	Short: "A brief description of your application",
 	Run: func(cmd *cobra.Command, args []string) {
-		var commitMsgFile = args[0]
+		preCommitDetected := os.Getenv("PRE_COMMIT") == "1"
+		if preCommitDetected {
+			log.Println("pre-commit detected")
+		}
+
+		commitMsgFile := args[0]
+		var commitSource string
+		if preCommitDetected {
+			commitSource = os.Getenv("PRE_COMMIT_COMMIT_MSG_SOURCE")
+		}
+		if commitSource == "message" {
+			log.Println("Skipping commit message generation")
+			return
+		}
 
 		gitDiff, err := exec.Command("git", "diff", "--cached").Output()
 		if err != nil {
 			cobra.CheckErr(err)
 		}
 		if len(gitDiff) == 0 {
+			// TODO: Check if this should be threat as an error
 			cobra.CheckErr("git diff is empty")
 		}
 
 		var model string
 		if len(gitDiff) >= viper.GetInt("diff-threshold") {
 			model = viper.GetString("long-model")
+			log.Printf("Using model '%s' for long diffs\n", model)
 		} else {
 			model = viper.GetString("short-model")
+			log.Printf("Using model '%s' for short diffs\n", model)
 		}
 
 		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
@@ -202,8 +219,8 @@ func initConfig() {
 		viper.SetConfigName(".autocommitmsg")
 	}
 
-	viper.SetDefault("short-model", "gpt-4-turbo")
-	viper.SetDefault("long-model", "gpt-5")
+	viper.SetDefault("short-model", "gpt-3.5-turbo")
+	viper.SetDefault("long-model", "gpt-4-turbo")
 	viper.SetDefault("diff-threshold", 500)
 	viper.AutomaticEnv() // read in environment variables that match
 

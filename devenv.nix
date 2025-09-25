@@ -15,6 +15,7 @@
     enable = true;
     entry = lib.getExe (pkgs.callPackage ./default.nix { });
     stages = [ "prepare-commit-msg" ];
+    verbose = true;
   };
 
   # See full reference at https://devenv.sh/reference/options/
