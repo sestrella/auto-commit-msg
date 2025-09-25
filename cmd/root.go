@@ -22,6 +22,16 @@ type OpenAITransport struct {
 	apiKey string
 }
 
+type CreateResponse struct {
+	Model string  `json:"model"`
+	Input []Input `json:"input"`
+}
+
+type Input struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 func (transport OpenAITransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", transport.apiKey))
 	req.Header.Set("Content-Type", "application/json")
@@ -37,11 +47,8 @@ func newOpenAIClient(apiKey string) OpenAIClient {
 	return OpenAIClient{httpClient}
 }
 
-func (client OpenAIClient) createResponse(model string, input []map[string]any) (map[string]any, error) {
-	body, err := json.Marshal(map[string]any{
-		"model": model,
-		"input": input,
-	})
+func (client OpenAIClient) createResponse(model string, input []Input) (map[string]any, error) {
+	body, err := json.Marshal(CreateResponse{model, input})
 	if err != nil {
 		return nil, err
 	}
@@ -97,14 +104,14 @@ var rootCmd = &cobra.Command{
 		}
 
 		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
-		res, err := client.createResponse(model, []map[string]any{
+		res, err := client.createResponse(model, []Input{
 			{
-				"role":    "developer",
-				"content": "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
+				Role:    "developer",
+				Content: "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
 			},
 			{
-				"role":    "user",
-				"content": gitDiff,
+				Role:    "user",
+				Content: string(gitDiff),
 			},
 		})
 		if err != nil {
@@ -113,7 +120,10 @@ var rootCmd = &cobra.Command{
 
 		// TODO: Create a response struct
 		commitMsg := res["output"].([]any)[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"].(string)
-		os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
+		err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
+		if err != nil {
+			cobra.CheckErr(err)
+		}
 	},
 }
 
