@@ -121,7 +121,6 @@ var rootCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		}
 		if len(gitDiff) == 0 {
-			// TODO: Check if this should be threat as an error
 			cobra.CheckErr("git diff is empty")
 		}
 
