@@ -83,16 +83,19 @@ var rootCmd = &cobra.Command{
 	Use:   "autocommitmsg",
 	Short: "A brief description of your application",
 	Run: func(cmd *cobra.Command, args []string) {
-		// var commitMsgFile = args[0]
+		var commitMsgFile = args[0]
 		// var commitSource string
 
 		// if len(args) > 1 {
 		// 	commitSource = args[1]
 		// }
-		gitDiffCmd := exec.Command("git", "diff", "--cached")
-		gitDiffOut, err := gitDiffCmd.Output()
+		gitDiff, err := exec.Command("git", "diff", "--cached").Output()
 		if err != nil {
 			panic(err)
+		}
+
+		if len(gitDiff) == 0 {
+			cobra.CheckErr("git diff is empty")
 		}
 
 		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
@@ -103,14 +106,16 @@ var rootCmd = &cobra.Command{
 			},
 			{
 				"role":    "user",
-				"content": gitDiffOut,
+				"content": gitDiff,
 			},
 		})
 		if err != nil {
 			cobra.CheckErr(err)
 		}
 
-		fmt.Printf("%v", res["output"].([]any)[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"])
+		// TODO: Create a response struct
+		commitMsg := res["output"].([]any)[0].(map[string]any)["content"].([]any)[0].(map[string]any)["text"].(string)
+		os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
 	},
 }
 
