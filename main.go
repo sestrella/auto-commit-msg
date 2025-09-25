@@ -1,7 +1,14 @@
 package main
 
-import "github.com/sestrella/autocommitmsg/cmd"
+import (
+	_ "embed"
+
+	"github.com/sestrella/autocommitmsg/cmd"
+)
+
+//go:embed version.txt
+var version string
 
 func main() {
-	cmd.Execute()
+	cmd.Execute(version)
 }
