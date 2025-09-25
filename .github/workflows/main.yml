@@ -29,6 +29,8 @@ jobs:
       - run: git diff
       - run: echo "tmpdir=$(mktemp -d)" >> "$GITHUB_OUTPUT"
         id: mktemp
+      - run: git init
+        working-directory: ${{ steps.mktemp.outputs.tmpdir }}
       - run: nix flake init -t ${{ github.workspace }}
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
       - run: devenv test
