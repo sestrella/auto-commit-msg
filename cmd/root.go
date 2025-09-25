@@ -99,7 +99,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "autocommitmsg",
-	Short: "A brief description of your application",
+	Short: "Generates a commit message from a git diff using AI.",
 	Run: func(cmd *cobra.Command, args []string) {
 		preCommitDetected := os.Getenv("PRE_COMMIT") == "1"
 		if preCommitDetected {
