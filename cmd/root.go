@@ -95,7 +95,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
-		res, err := client.createResponse("gpt-4-turbo", []map[string]any{
+		res, err := client.createResponse(viper.GetString("model"), []map[string]any{
 			{
 				"role":    "developer",
 				"content": "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
@@ -154,6 +154,7 @@ func initConfig() {
 		viper.SetConfigName(".autocommitmsg")
 	}
 
+	viper.SetDefault("model", "gpt-4-turbo")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
