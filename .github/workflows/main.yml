@@ -24,11 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
-      - run: nix profile install nixpkgs#devenv
+      - run: nix profile add nixpkgs#devenv
       - run: sed -i 's/github:sestrella\/auto-commit-msg/github:sestrella\/auto-commit-msg?ref=${{ github.sha }}/g' templates/default/devenv.nix
+      - run: git diff
       - run: echo "tmpdir=$(mktemp -d)" >> "$GITHUB_OUTPUT"
         id: mktemp
-      - run: nix flake init -t ${{ github.workspace }}#${{ matrix.template.name }}
+      - run: nix flake init -t ${{ github.workspace }}
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
       - run: devenv shell -- cat .pre-commit-config.yaml
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
