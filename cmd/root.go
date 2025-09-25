@@ -89,13 +89,19 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-
 		if len(gitDiff) == 0 {
 			cobra.CheckErr("git diff is empty")
 		}
 
+		var model string
+		if len(gitDiff) >= viper.GetInt("diff-threshold") {
+			model = viper.GetString("long-model")
+		} else {
+			model = viper.GetString("short-model")
+		}
+
 		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
-		res, err := client.createResponse(viper.GetString("model"), []map[string]any{
+		res, err := client.createResponse(model, []map[string]any{
 			{
 				"role":    "developer",
 				"content": "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
@@ -154,7 +160,9 @@ func initConfig() {
 		viper.SetConfigName(".autocommitmsg")
 	}
 
-	viper.SetDefault("model", "gpt-4-turbo")
+	viper.SetDefault("short-model", "gpt-4-turbo")
+	viper.SetDefault("long-model", "gpt-5")
+	viper.SetDefault("diff-threshold", 500)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
