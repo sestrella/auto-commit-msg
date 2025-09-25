@@ -15,7 +15,6 @@ import (
 
 type OpenAIClient struct {
 	httpClient http.Client
-	baseUrl    string
 }
 
 type OpenAITransport struct {
@@ -35,10 +34,7 @@ func newOpenAIClient(apiKey string) OpenAIClient {
 		apiKey: apiKey,
 	}
 	httpClient := http.Client{Transport: transport}
-	return OpenAIClient{
-		httpClient: httpClient,
-		baseUrl:    "https://api.openai.com/v1",
-	}
+	return OpenAIClient{httpClient}
 }
 
 func (client OpenAIClient) createResponse(model string, input []map[string]any) (map[string]any, error) {
@@ -50,7 +46,7 @@ func (client OpenAIClient) createResponse(model string, input []map[string]any) 
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.baseUrl, "/responses"), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/responses", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
