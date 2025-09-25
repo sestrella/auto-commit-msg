@@ -111,6 +111,8 @@ var rootCmd = &cobra.Command{
 		if preCommitDetected {
 			commitSource = os.Getenv("PRE_COMMIT_COMMIT_MSG_SOURCE")
 		}
+
+		log.Printf("Commit source: %s\n", commitSource)
 		if commitSource == "message" {
 			log.Println("Skipping commit message generation")
 			return
