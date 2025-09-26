@@ -26,7 +26,6 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - run: nix profile add nixpkgs#devenv
       - run: sed -i 's/github:sestrella\/auto-commit-msg/github:sestrella\/auto-commit-msg?ref=${{ github.sha }}/g' templates/default/devenv.yaml
-      - run: git diff
       - run: echo "tmpdir=$(mktemp -d)" >> "$GITHUB_OUTPUT"
         id: mktemp
       - run: git init
@@ -35,5 +34,5 @@ jobs:
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
       - run: devenv test
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
-      - run: devenv shell -- ls -al
+      - run: cat .pre-commit-config.yaml
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}

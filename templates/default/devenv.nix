@@ -8,4 +8,6 @@
     entry = lib.getExe pkgs.autocommitmsg;
     stages = [ "prepare-commit-msg" ];
   };
+
+  cachix.pull = [ "sestrella" ];
 }
