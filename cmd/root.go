@@ -138,7 +138,12 @@ var rootCmd = &cobra.Command{
 			log.Printf("git diff LOC (%d) over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffLocThreshold, model)
 		}
 
-		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
+		apiKey := os.Getenv("OPENAI_API_KEY")
+		if apiKey == "" {
+			cobra.CheckErr("environment variable OPENAI_API_KEY is required")
+		}
+
+		client := newOpenAIClient(apiKey)
 		res, err := client.createResponse(model, []Input{
 			{
 				Role:    "developer",
@@ -162,7 +167,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 		if msgOutput == nil {
-			cobra.CheckErr(fmt.Sprintf("No output with type 'message' found in: %v", res))
+			cobra.CheckErr(fmt.Sprintf("no output with type 'message' found in: %v", res))
 		}
 
 		var outTextContent *Content
@@ -173,7 +178,7 @@ var rootCmd = &cobra.Command{
 			}
 		}
 		if outTextContent == nil {
-			cobra.CheckErr(fmt.Sprintf("No content with type 'output_text' found in: %v", msgOutput))
+			cobra.CheckErr(fmt.Sprintf("no content with type 'output_text' found in: %v", msgOutput))
 		}
 
 		commitMsg := outTextContent.Text
