@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -125,13 +126,16 @@ var rootCmd = &cobra.Command{
 			cobra.CheckErr("git diff is empty")
 		}
 
+		gitDiffStr := string(gitDiff)
+		gitDiffLoc := strings.Count(gitDiffStr, "\n")
+		diffLocThreshold := viper.GetInt("diff-loc-threshold")
 		var model string
-		if len(gitDiff) >= viper.GetInt("diff-threshold") {
-			model = viper.GetString("long-model")
-			log.Printf("Using model '%s' for long diffs\n", model)
+		if gitDiffLoc < diffLocThreshold {
+			model = viper.GetString("short-diff-model")
+			log.Printf("git diff LOC (%d) under %d threshold, using model for short diffs: %s\n", gitDiffLoc, diffLocThreshold, model)
 		} else {
-			model = viper.GetString("short-model")
-			log.Printf("Using model '%s' for short diffs\n", model)
+			model = viper.GetString("long-diff-model")
+			log.Printf("git diff LOC (%d) over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffLocThreshold, model)
 		}
 
 		client := newOpenAIClient(os.Getenv("OPENAI_API_KEY"))
@@ -142,7 +146,7 @@ var rootCmd = &cobra.Command{
 			},
 			{
 				Role:    "user",
-				Content: string(gitDiff),
+				Content: gitDiffStr,
 			},
 		})
 		if err != nil {
@@ -220,9 +224,9 @@ func initConfig() {
 		viper.SetConfigName(".autocommitmsg")
 	}
 
-	viper.SetDefault("short-model", "gpt-3.5-turbo")
-	viper.SetDefault("long-model", "gpt-4-turbo")
-	viper.SetDefault("diff-threshold", 500)
+	viper.SetDefault("short-diff-model", "gpt-3.5-turbo")
+	viper.SetDefault("long-diff-model", "gpt-4-turbo")
+	viper.SetDefault("diff-loc-threshold", 500)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
