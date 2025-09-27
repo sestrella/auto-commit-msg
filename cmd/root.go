@@ -98,7 +98,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "autocommitmsg",
+	Use:   "auto-commit-msg",
 	Short: "Generates a commit message from a git diff using AI.",
 	Run: func(cmd *cobra.Command, args []string) {
 		preCommitDetected := os.Getenv("PRE_COMMIT") == "1"
@@ -196,7 +196,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.autocommitmsg.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.auto-commit-msg.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -213,10 +213,10 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".autocommitmsg" (without extension).
+		// Search config in home directory with name ".auto-commit-msg" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".autocommitmsg")
+		viper.SetConfigName(".auto-commit-msg")
 	}
 
 	viper.SetDefault("short-model", "gpt-3.5-turbo")

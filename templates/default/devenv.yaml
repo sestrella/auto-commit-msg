@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
 inputs:
-  autocommitmsg:
+  auto-commit-msg:
     url: github:sestrella/auto-commit-msg
     overlays: [default]
   nixpkgs:
