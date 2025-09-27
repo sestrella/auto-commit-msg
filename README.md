@@ -39,3 +39,7 @@ Declare the `autocommitmsg` hook as follows:
 
 **Note:** Enabling `dotenv` is optional if the `OPENAI_API_KEY` environment
 variable is available.
+
+## License
+
+[MIT](LICENSE)
