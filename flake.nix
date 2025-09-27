@@ -12,6 +12,7 @@
 
   outputs =
     {
+      self,
       gomod2nix,
       nixpkgs,
       systems,
@@ -33,5 +34,14 @@
           default = pkgs.callPackage ./default.nix { };
         }
       );
+
+      overlays.default = final: prev: {
+        autocommitmsg = self.packages.${prev.system}.default;
+      };
+
+      templates.default = {
+        description = "";
+        path = ./templates/default;
+      };
     };
 }
