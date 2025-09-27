@@ -2,7 +2,7 @@
 
 pkgs.buildGoApplication {
   pname = "autocommitmsg";
-  version = "0.1.0";
+  version = pkgs.lib.trim (builtins.readFile ./version.txt);
   src = ./.;
   modules = ./gomod2nix.toml;
   meta.mainProgram = "autocommitmsg";
