@@ -42,12 +42,13 @@ variable is available.
 
 ## Usage
 
-After setting `autocommitmsg` as a
-[prepare-commit-msg](https://git-scm.com/docs/githooks#_prepare_commit_msg)
-hook, invoking `git commit` without a commit message generates a commit message.
-If a commit message is given, `autocommitmsg` does not generate a commit message
-and instead uses the one provided by the user.
+After setting `autocommitmsg` as a [prepare-commit-msg] hook, invoking `git
+commit` without a commit message generates a commit message. If a commit message
+is given, `autocommitmsg` does not generate a commit message and instead uses
+the one provided by the user.
 
 ## License
 
 [MIT](LICENSE)
+
+[prepare-commit-msg]: https://git-scm.com/docs/githooks#_prepare_commit_msg
