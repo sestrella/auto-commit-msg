@@ -4,7 +4,7 @@
 
 Generates a commit message from a `git diff` using AI.
 
-## Usage
+## Installation
 
 ### devenv users
 
