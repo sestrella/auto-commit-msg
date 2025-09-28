@@ -46,6 +46,7 @@ jobs:
       matrix:
         package:
           - static-linux-amd64
+          - static-linux-arm64
       fail-fast: true
     steps:
       - uses: actions/checkout@v5
