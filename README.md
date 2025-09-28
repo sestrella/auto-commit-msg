@@ -19,7 +19,7 @@ inputs:
     url: github:cachix/devenv-nixpkgs/rolling
 ```
 
-Declare the `autocommitmsg` hook as follows:
+Add the `autocommitmsg` hook to the `devenv.nix` file as follows:
 
 ```nix
 { pkgs, lib, ... }:
