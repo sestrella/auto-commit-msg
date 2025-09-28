@@ -32,6 +32,18 @@
         in
         {
           default = pkgs.callPackage ./default.nix { };
+          static-linux-amd64 = pkgs.callPackage ./default.nix {
+            CGO_ENABLED = 0;
+            GOOS = "linux";
+            GOARCH = "amd64";
+            ldflags = [ "-extldflags '-static'" ];
+          };
+          static-linux-arm64 = pkgs.callPackage ./default.nix {
+            CGO_ENABLED = 0;
+            GOOS = "linux";
+            GOARCH = "arm64";
+            ldflags = [ "-extldflags '-static'" ];
+          };
         }
       );
 
