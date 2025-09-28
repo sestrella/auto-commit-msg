@@ -4,6 +4,7 @@
   dotenv.enable = true;
 
   packages = [
+    pkgs.asciinema
     pkgs.cobra-cli
     pkgs.gitleaks
     pkgs.gomod2nix

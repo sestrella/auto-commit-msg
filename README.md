@@ -43,9 +43,14 @@ variable is available.
 ## Usage
 
 After setting `autocommitmsg` as a [prepare-commit-msg] hook, invoking `git
-commit` without a commit message generates a commit message. If a commit message
-is given, `autocommitmsg` does not generate a commit message and instead uses
-the one provided by the user.
+commit` without a commit message generates a commit message.
+
+![generated-commit](assets/generated-commit.gif)
+
+If a commit message is given, `autocommitmsg` does not generate a commit message
+and instead uses the one provided by the user.
+
+![custom-commit](assets/custom-commit.gif)
 
 ## License
 
