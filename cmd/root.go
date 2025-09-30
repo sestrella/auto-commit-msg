@@ -17,6 +17,7 @@ import (
 
 type OpenAIClient struct {
 	httpClient http.Client
+	baseUrl    string
 }
 
 type OpenAITransport struct {
@@ -25,27 +26,25 @@ type OpenAITransport struct {
 }
 
 type CreateResponse struct {
-	Model string  `json:"model"`
-	Input []Input `json:"input"`
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
 }
 
-type Input struct {
+type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
 type CreatedResponse struct {
-	Output []Output `json:"output"`
+	Choices []Choice `json:"choices"`
 }
 
-type Output struct {
-	Type    string    `json:"type"`
-	Content []Content `json:"content"`
+type Choice struct {
+	Message ChoiceMessage `json:"message"`
 }
 
-type Content struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
+type ChoiceMessage struct {
+	Content string `json:"content"`
 }
 
 func (transport OpenAITransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -54,22 +53,22 @@ func (transport OpenAITransport) RoundTrip(req *http.Request) (*http.Response, e
 	return transport.base.RoundTrip(req)
 }
 
-func newOpenAIClient(apiKey string) OpenAIClient {
+func newOpenAIClient(baseUrl string, apiKey string) OpenAIClient {
 	transport := OpenAITransport{
 		base:   http.DefaultTransport,
 		apiKey: apiKey,
 	}
 	httpClient := http.Client{Transport: transport}
-	return OpenAIClient{httpClient}
+	return OpenAIClient{httpClient, baseUrl}
 }
 
-func (client OpenAIClient) createResponse(model string, input []Input) (*CreatedResponse, error) {
+func (client OpenAIClient) createChatCompletion(model string, input []Message) (*CreatedResponse, error) {
 	body, err := json.Marshal(CreateResponse{model, input})
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/responses", bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/chat/completions", client.baseUrl), bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
@@ -138,13 +137,23 @@ var rootCmd = &cobra.Command{
 			log.Printf("git diff LOC (%d) over %d threshold, using model for long diffs: %s\n", gitDiffLoc, logThreshold, model)
 		}
 
-		apiKey := os.Getenv("OPENAI_API_KEY")
+		apiKeyEnvName := viper.GetString("api-key")
+		if apiKeyEnvName == "" {
+			cobra.CheckErr("api-key environment variable name cannot be empty")
+		}
+
+		apiKey := os.Getenv(apiKeyEnvName)
 		if apiKey == "" {
 			cobra.CheckErr("environment variable OPENAI_API_KEY is required")
 		}
 
-		client := newOpenAIClient(apiKey)
-		res, err := client.createResponse(model, []Input{
+		baseUrl := viper.GetString("base-url")
+		if baseUrl == "" {
+			cobra.CheckErr("base-url cannot be empty")
+		}
+
+		client := newOpenAIClient(baseUrl, apiKey)
+		res, err := client.createChatCompletion(model, []Message{
 			{
 				Role:    "developer",
 				Content: "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
@@ -157,31 +166,11 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-
-		// TODO: Look for a library that provides high-order functions like find
-		var msgOutput *Output
-		for _, output := range res.Output {
-			if output.Type == "message" {
-				msgOutput = &output
-				break
-			}
-		}
-		if msgOutput == nil {
-			cobra.CheckErr(fmt.Sprintf("no output with type 'message' found in: %v", res))
+		if len(res.Choices) == 0 {
+			cobra.CheckErr(fmt.Sprintf("TODO: %v", res.Choices))
 		}
 
-		var outTextContent *Content
-		for _, content := range msgOutput.Content {
-			if content.Type == "output_text" {
-				outTextContent = &content
-				break
-			}
-		}
-		if outTextContent == nil {
-			cobra.CheckErr(fmt.Sprintf("no content with type 'output_text' found in: %v", msgOutput))
-		}
-
-		commitMsg := outTextContent.Text
+		commitMsg := res.Choices[0].Message.Content
 		err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
 		if err != nil {
 			cobra.CheckErr(err)
@@ -230,6 +219,8 @@ func initConfig() {
 		viper.SetConfigName(".autocommitmsg")
 	}
 
+	viper.SetDefault("base-url", "https://api.openai.com/v1")
+	viper.SetDefault("api-key", "OPENAI_API_KEY")
 	viper.SetDefault("short-model", "gpt-3.5-turbo")
 	viper.SetDefault("long-model", "gpt-4-turbo")
 	viper.SetDefault("loc-threshold", 500)
