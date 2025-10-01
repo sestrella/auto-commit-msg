@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -142,7 +141,7 @@ var rootCmd = &cobra.Command{
 
 		apiKey := os.Getenv(apiKeyEnvName)
 		if apiKey == "" {
-			cobra.CheckErr("environment variable OPENAI_API_KEY is required")
+			cobra.CheckErr(fmt.Sprintf("environment variable %s is required", apiKeyEnvName))
 		}
 
 		baseUrl := viper.GetString("base-url")
