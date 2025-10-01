@@ -124,14 +124,14 @@ var rootCmd = &cobra.Command{
 
 		gitDiffStr := string(gitDiff)
 		gitDiffLoc := strings.Count(gitDiffStr, "\n")
-		logThreshold := viper.GetInt("loc-threshold")
+		diffThreshold := viper.GetInt("diff-threshold")
 		var model string
-		if gitDiffLoc < logThreshold {
+		if gitDiffLoc < diffThreshold {
 			model = viper.GetString("short-model")
-			log.Printf("git diff LOC (%d) under %d threshold, using model for short diffs: %s\n", gitDiffLoc, logThreshold, model)
+			log.Printf("git diff LOC %d under %d threshold, using model for short diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		} else {
 			model = viper.GetString("long-model")
-			log.Printf("git diff LOC (%d) over %d threshold, using model for long diffs: %s\n", gitDiffLoc, logThreshold, model)
+			log.Printf("git diff LOC %d over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		}
 
 		apiKeyEnvName := viper.GetString("api-key")
@@ -216,11 +216,11 @@ func initConfig() {
 		viper.SetConfigName(".autocommitmsg")
 	}
 
-	viper.SetDefault("base-url", "https://api.openai.com/v1")
-	viper.SetDefault("api-key", "OPENAI_API_KEY")
-	viper.SetDefault("short-model", "gpt-3.5-turbo")
-	viper.SetDefault("long-model", "gpt-4-turbo")
-	viper.SetDefault("loc-threshold", 500)
+	viper.SetDefault("base-url", "https://generativelanguage.googleapis.com/v1beta/openai")
+	viper.SetDefault("api-key", "GEMINI_API_KEY")
+	viper.SetDefault("short-model", "gemini-2.5-flash-lite")
+	viper.SetDefault("long-model", "gemini-2.5-flash")
+	viper.SetDefault("diff-threshold", 500)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
