@@ -80,9 +80,7 @@ func (client OpenAIClient) createChatCompletion(model string, input []Message) (
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		fmt.Printf("%v\n", res)
-		// TODO: Extract error message from response
-		return nil, errors.New("TODO")
+		return nil, fmt.Errorf("response status code is not 200: %+v", res)
 	}
 
 	var data CreatedResponse
@@ -167,7 +165,7 @@ var rootCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		}
 		if len(res.Choices) == 0 {
-			cobra.CheckErr(fmt.Sprintf("TODO: %v", res.Choices))
+			cobra.CheckErr(fmt.Sprintf("expects response to include at least one choice: %+v", res))
 		}
 
 		commitMsg := res.Choices[0].Message.Content
