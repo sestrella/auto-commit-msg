@@ -4,6 +4,11 @@
 
 Generates a commit message from a `git diff` using AI.
 
+**Features**
+
+- Supports OpenAI-like providers.
+- Switch model based on the diff.
+
 ## Installation
 
 ### devenv users
