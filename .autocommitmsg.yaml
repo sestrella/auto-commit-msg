@@ -1,0 +1,4 @@
+base-url: https://generativelanguage.googleapis.com/v1beta/openai
+api-key: GEMINI_API_KEY
+short-model: gemini-2.5-flash-lite
+long-model: gemini-2.5-flash

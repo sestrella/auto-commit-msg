@@ -10,6 +10,6 @@ devenv.local.nix
 
 # Project specific
 .env
-auto-commit-msg
+autocommitmsg
 result
 templates/default/devenv.lock
