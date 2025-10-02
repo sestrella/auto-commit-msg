@@ -45,6 +45,33 @@ Add the `autocommitmsg` hook to the `devenv.nix` file as follows:
 **Note:** Enabling `dotenv` is optional if the `OPENAI_API_KEY` environment
 variable is available.
 
+## Configuration
+
+`autocommitmsg` can be configured via a `.autocommitmsg.yaml` file in
+the project's root directory or the user's home directory. The available
+configuration parameters are:
+
+- **`base-url`**: The base URL of the OpenAI-like provider.
+  - **Default**: `https://generativelanguage.googleapis.com/v1beta/openai`
+- **`api-key`**: The name of the environment variable that contains the API key.
+  - **Default**: `GEMINI_API_KEY`
+- **`short-model`**: The model to use for diffs with fewer lines than `diff-threshold`.
+  - **Default**: `gemini-2.5-flash-lite`
+- **`long-model`**: The model to use for diffs with more lines than `diff-threshold`.
+  - **Default**: `gemini-2.5-flash`
+- **`diff-threshold`**: The line count threshold to switch between `short-model` and `long-model`.
+  - **Default**: `500`
+
+Here is an example `.autocommitmsg.yaml` file:
+
+```yaml
+base-url: "https://api.openai.com/v1"
+api-key: "OPENAI_API_KEY"
+short-model: "gpt-3.5-turbo"
+long-model: "gpt-4-turbo"
+diff-threshold: 250
+```
+
 ## Usage
 
 After setting `autocommitmsg` as a [prepare-commit-msg] hook, invoking `git
