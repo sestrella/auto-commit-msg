@@ -67,7 +67,8 @@ jobs:
       - run: zip -r $NAME_PREFIX.zip $NAME_PREFIX
       - uses: actions/upload-artifact@v4
         with:
-          path: $NAME_PREFIX.zip
+          path: "*.zip"
+          if-no-files-found: error
 
   draft-release:
     runs-on: ubuntu-latest
