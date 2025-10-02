@@ -45,7 +45,7 @@ jobs:
     strategy:
       matrix:
         goos:
-          # - darwin
+          - darwin
           - linux
         goarch:
           - amd64
