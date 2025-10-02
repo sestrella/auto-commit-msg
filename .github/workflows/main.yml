@@ -39,7 +39,7 @@ jobs:
       - run: cat .pre-commit-config.yaml
         working-directory: ${{ steps.mktemp.outputs.tmpdir }}
 
-  release:
+  binaries:
     runs-on: ubuntu-latest
     # needs: [build, template]
     strategy:
@@ -51,14 +51,19 @@ jobs:
           - amd64
           - arm64
       fail-fast: true
+    env:
+      NAME_PREFIX: autocommitmsg-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - run: go build
+      - run: go build -o $NAME_PREFIX/autocommitmsg
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
-      - run: file autocommitmsg
+      - run: |
+          cp LICENSE $NAME_PREFIX/
+          zip -r $NAME_PREFIX.zip $NAME_PREFIX
+
