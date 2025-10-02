@@ -67,7 +67,8 @@ jobs:
       - run: zip -r $NAME_PREFIX.zip $NAME_PREFIX
       - uses: actions/upload-artifact@v4
         with:
-          path: "*.zip"
+          name: ${{ env.NAME_PREFIX }}
+          path: ${{ env.NAME_PREFIX }}.zip
           if-no-files-found: error
 
   draft-release:
