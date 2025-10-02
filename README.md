@@ -67,8 +67,8 @@ Here is an example `.autocommitmsg.yaml` file:
 ```yaml
 base-url: "https://api.openai.com/v1"
 api-key: "OPENAI_API_KEY"
-short-model: "gpt-3.5-turbo"
-long-model: "gpt-4-turbo"
+short-model: "o4-mini"
+long-model: "gpt-4.1"
 diff-threshold: 250
 ```
 
