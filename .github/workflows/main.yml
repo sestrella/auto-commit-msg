@@ -62,4 +62,3 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: 0
       - run: file autocommitmsg
-      - run: ldd autocommitmsg
