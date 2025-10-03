@@ -1,12 +1,6 @@
-{
-  pkgs,
-  lib,
-  ldflags ? [ ],
-  ...
-}@attrs:
+{ pkgs, lib }:
 
 pkgs.buildGoApplication {
-  inherit ldflags;
   pname = "autocommitmsg";
   version = lib.trim (builtins.readFile ./version.txt);
   src = ./.;
@@ -17,4 +11,3 @@ pkgs.buildGoApplication {
     mainProgram = "autocommitmsg";
   };
 }
-// attrs
