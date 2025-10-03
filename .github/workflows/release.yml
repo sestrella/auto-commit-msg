@@ -1,43 +1,14 @@
-name: Main
+name: Release
 
-on: push
+on:
+  push:
+    tags: ["v*"]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: cachix/install-nix-action@v31
-      - uses: cachix/cachix-action@v16
-        with:
-          name: sestrella
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          skipPush: ${{ github.ref_name != 'main' }}
-      - run: nix build
-
-  template:
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: cachix/install-nix-action@v31
-      - run: nix profile add nixpkgs#devenv
-      - run: sed -i 's/github:sestrella\/auto-commit-msg/github:sestrella\/auto-commit-msg?ref=${{ github.sha }}/g' templates/default/devenv.yaml
-      - run: echo "tmpdir=$(mktemp -d)" >> "$GITHUB_OUTPUT"
-        id: mktemp
-      - run: git init
-        working-directory: ${{ steps.mktemp.outputs.tmpdir }}
-      - run: nix flake init -t ${{ github.workspace }}
-        working-directory: ${{ steps.mktemp.outputs.tmpdir }}
-      - run: devenv test
-        working-directory: ${{ steps.mktemp.outputs.tmpdir }}
-      - run: cat .pre-commit-config.yaml
-        working-directory: ${{ steps.mktemp.outputs.tmpdir }}
-
   binary:
     runs-on: ubuntu-latest
     needs:
