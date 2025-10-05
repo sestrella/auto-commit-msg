@@ -45,7 +45,7 @@
       };
 
       templates.default = {
-        description = "";
+        description = "Showcase the devenv integration";
         path = ./templates/default;
       };
     };
