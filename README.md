@@ -12,7 +12,8 @@ Generates a commit message from a `git diff` using AI.
 
 ![demo](demo.gif)
 
-The commit messages for this project were generated using this tool.
+The [commit messages](https://github.com/sestrella/autocommitmsg/commits/main/)
+for this project were generated using this tool.
 
 ## Installation
 
