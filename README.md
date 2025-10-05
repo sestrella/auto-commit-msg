@@ -12,6 +12,8 @@ Generates a commit message from a `git diff` using AI.
 
 ![generated-commit](assets/generated-commit.gif)
 
+The commit messages for this project were generated using this tool.
+
 ## Installation
 
 ### devenv users
