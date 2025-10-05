@@ -6,6 +6,7 @@
       url = "github:nix-community/gomod2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-filter.url = "github:numtide/nix-filter";
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     systems.url = "github:nix-systems/default";
   };
@@ -14,6 +15,7 @@
     {
       self,
       gomod2nix,
+      nix-filter,
       nixpkgs,
       systems,
       ...
@@ -27,7 +29,10 @@
         let
           pkgs = import nixpkgs {
             inherit system;
-            overlays = [ gomod2nix.overlays.default ];
+            overlays = [
+              gomod2nix.overlays.default
+              nix-filter.overlays.default
+            ];
           };
         in
         {

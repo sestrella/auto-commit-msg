@@ -1,9 +1,22 @@
-{ pkgs, lib }:
+{
+  pkgs,
+  lib,
+  nix-filter,
+}:
 
 pkgs.buildGoApplication {
   pname = "autocommitmsg";
   version = lib.trim (builtins.readFile ./version.txt);
-  src = ./.;
+  src = nix-filter {
+    root = ./.;
+    include = [
+      "cmd"
+      ./go.mod
+      ./go.sum
+      ./main.go
+      ./version.txt
+    ];
+  };
   modules = ./gomod2nix.toml;
   meta = {
     description = "Generates a commit message from a git diff using AI";
