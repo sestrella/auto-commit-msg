@@ -128,9 +128,15 @@ var rootCmd = &cobra.Command{
 		var model string
 		if gitDiffLoc < diffThreshold {
 			model = viper.GetString("short-model")
+			if model == "" {
+				cobra.CheckErr("short-model cannot be empty")
+			}
 			log.Printf("git diff LOC %d under %d threshold, using model for short diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		} else {
 			model = viper.GetString("long-model")
+			if model == "" {
+				cobra.CheckErr("long-model cannot be empty")
+			}
 			log.Printf("git diff LOC %d over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		}
 
