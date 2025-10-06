@@ -3,11 +3,13 @@
 [![Build](https://github.com/sestrella/autocommitmsg/actions/workflows/build.yml/badge.svg)](https://github.com/sestrella/autocommitmsg/actions/workflows/build.yml)
 [![Release](https://github.com/sestrella/autocommitmsg/actions/workflows/release.yml/badge.svg)](https://github.com/sestrella/autocommitmsg/actions/workflows/release.yml)
 
-Generates a commit message from a `git diff` using AI.
+Generates a commit message from a `git diff` using AI. The [commit
+messages](https://github.com/sestrella/autocommitmsg/commits/main/) for this
+project were generated using this tool.
 
 **Features**
 
-- Supports OpenAI-like providers.
+- Supports OpenAI compatible providers.
 - Switch model based on the diff.
 
 ![generated-commit](assets/generated-commit.gif)
