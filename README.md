@@ -19,9 +19,11 @@ Generates a commit message from a `git diff` using AI.
 ## Installation
 
 <details>
-<summary>Nix users</summary>
+<summary>Instructions for Nix users</summary>
 
-### devenv users
+### Nix users
+
+#### devenv
 
 Add the `autocommitmsg` input to the `devenv.yaml` file:
 
@@ -58,7 +60,9 @@ variable is available.
 </details>
 
 <details>
-<summary>Non-Nix users</summary>
+<summary>Instructions for non-Nix users</summary>
+
+### Non-Nix users
 
 Download the precompiled binary from the [releases] page that matches your current
 system. Unzip the file and place the binary in a location available on your
