@@ -11,6 +11,7 @@ pkgs.buildGoApplication {
     root = ./.;
     include = [
       "cmd"
+      "internal"
       ./go.mod
       ./go.sum
       ./main.go
