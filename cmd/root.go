@@ -12,16 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	BaseUrl       string `mapstructure:"base-url"`
-	ApiKey        string `mapstructure:"api-key"`
-	ShortModel    string `mapstructure:"short-model"`
-	LongModel     string `mapstructure:"long-model"`
-	DiffThreshold int    `mapstructure:"diff-threshold"`
-}
-
 var cfgFile string
-var config Config
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -54,23 +45,23 @@ var rootCmd = &cobra.Command{
 
 		gitDiffStr := string(gitDiff)
 		gitDiffLoc := strings.Count(gitDiffStr, "\n")
-		diffThreshold := config.DiffThreshold
+		diffThreshold := viper.GetInt("diff-threshold")
 		var model string
 		if gitDiffLoc < diffThreshold {
-			model = config.ShortModel
+			model = viper.GetString("short-model")
 			if model == "" {
 				cobra.CheckErr("short-model cannot be empty")
 			}
 			log.Printf("git diff LOC %d under %d threshold, using model for short diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		} else {
-			model = config.LongModel
+			model = viper.GetString("long-model")
 			if model == "" {
 				cobra.CheckErr("long-model cannot be empty")
 			}
 			log.Printf("git diff LOC %d over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		}
 
-		apiKeyEnvName := config.ApiKey
+		apiKeyEnvName := viper.GetString("api-key")
 		if apiKeyEnvName == "" {
 			cobra.CheckErr("api-key environment variable name cannot be empty")
 		}
@@ -80,7 +71,7 @@ var rootCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Sprintf("environment variable %s is required", apiKeyEnvName))
 		}
 
-		baseUrl := config.BaseUrl
+		baseUrl := viper.GetString("base-url")
 		if baseUrl == "" {
 			cobra.CheckErr("base-url cannot be empty")
 		}
@@ -160,7 +151,8 @@ func initConfig() {
 	viper.SetDefault("diff-threshold", 500)
 	viper.AutomaticEnv() // read in environment variables that match
 
-	if err := viper.Unmarshal(&config); err == nil {
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }
