@@ -1,7 +1,6 @@
 # autocommitmsg
 
 [![Build](https://github.com/sestrella/autocommitmsg/actions/workflows/build.yml/badge.svg)](https://github.com/sestrella/autocommitmsg/actions/workflows/build.yml)
-[![Release](https://github.com/sestrella/autocommitmsg/actions/workflows/release.yml/badge.svg)](https://github.com/sestrella/autocommitmsg/actions/workflows/release.yml)
 
 Generates a commit message from a `git diff` using AI.
 
