@@ -6,8 +6,8 @@ Generates a commit message from a `git diff` using AI.
 
 **Features**
 
-- Supports OpenAI compatible providers, defaults to Gemini.
-- Switch model based on the diff.
+- Supports OpenAI-compatible providers, with Gemini as the default.
+- Improve commit messages by switching to a model based on diff size.
 
 ![generated-commit](assets/generated-commit.gif)
 
