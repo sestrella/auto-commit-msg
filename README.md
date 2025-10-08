@@ -18,7 +18,14 @@ Generates a commit message from a `git diff` using AI.
 
 ## Installation
 
-### devenv users
+Download the precompiled binary from the [releases] page that matches your current
+system. Unzip the file and place the binary in a location available on your
+`PATH` environment variable.
+
+<details>
+<summary>Instructions for Nix users</summary>
+
+### devenv
 
 Add the `autocommitmsg` input to the `devenv.yaml` file:
 
@@ -51,6 +58,8 @@ Add the `autocommitmsg` hook to the `devenv.nix` file as follows:
 
 **Note:** Enabling `dotenv` is optional if the `OPENAI_API_KEY` environment
 variable is available.
+
+</details>
 
 ## Configuration
 
@@ -93,3 +102,4 @@ the one provided by the user.
 [MIT](LICENSE)
 
 [prepare-commit-msg]: https://git-scm.com/docs/githooks#_prepare_commit_msg
+[releases]: https://github.com/sestrella/autocommitmsg/releases
