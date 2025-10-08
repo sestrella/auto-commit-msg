@@ -25,9 +25,7 @@ system. Unzip the file and place the binary in a location available on your
 <details>
 <summary>Instructions for Nix users</summary>
 
-### Nix users
-
-#### devenv
+### devenv
 
 Add the `autocommitmsg` input to the `devenv.yaml` file:
 
