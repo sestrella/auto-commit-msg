@@ -18,6 +18,10 @@ Generates a commit message from a `git diff` using AI.
 
 ## Installation
 
+Download the precompiled binary from the [releases] page that matches your current
+system. Unzip the file and place the binary in a location available on your
+`PATH` environment variable.
+
 <details>
 <summary>Instructions for Nix users</summary>
 
@@ -56,17 +60,6 @@ Add the `autocommitmsg` hook to the `devenv.nix` file as follows:
 
 **Note:** Enabling `dotenv` is optional if the `OPENAI_API_KEY` environment
 variable is available.
-
-</details>
-
-<details>
-<summary>Instructions for non-Nix users</summary>
-
-### Non-Nix users
-
-Download the precompiled binary from the [releases] page that matches your current
-system. Unzip the file and place the binary in a location available on your
-`PATH` environment variable.
 
 </details>
 
