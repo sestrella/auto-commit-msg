@@ -7,55 +7,55 @@ import (
 	"net/http"
 )
 
-type Client struct {
+type OpenAIClient struct {
 	httpClient http.Client
 	baseUrl    string
 }
 
-type openAITransport struct {
+type OpenAITransport struct {
 	base   http.RoundTripper
 	apiKey string
 }
 
-type createResponse struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
+type RequestChatCompletions struct {
+	Model    string           `json:"model"`
+	Messages []RequestMessage `json:"messages"`
 }
 
-type Message struct {
+type RequestMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-type CreatedResponse struct {
-	Choices []Choice `json:"choices"`
+type ResponseChatCompletion struct {
+	Choices []ResponseChoice `json:"choices"`
 }
 
-type Choice struct {
-	Message ChoiceMessage `json:"message"`
+type ResponseChoice struct {
+	Message ResponseMessage `json:"message"`
 }
 
-type ChoiceMessage struct {
+type ResponseMessage struct {
 	Content string `json:"content"`
 }
 
-func (transport openAITransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (transport OpenAITransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", transport.apiKey))
 	req.Header.Set("Content-Type", "application/json")
 	return transport.base.RoundTrip(req)
 }
 
-func NewClient(baseUrl string, apiKey string) Client {
-	transport := openAITransport{
+func NewClient(baseUrl string, apiKey string) OpenAIClient {
+	transport := OpenAITransport{
 		base:   http.DefaultTransport,
 		apiKey: apiKey,
 	}
 	httpClient := http.Client{Transport: transport}
-	return Client{httpClient, baseUrl}
+	return OpenAIClient{httpClient, baseUrl}
 }
 
-func (client Client) CreateChatCompletion(model string, input []Message) (*CreatedResponse, error) {
-	body, err := json.Marshal(createResponse{model, input})
+func (client OpenAIClient) CreateChatCompletion(model string, input []RequestMessage) (*ResponseChatCompletion, error) {
+	body, err := json.Marshal(RequestChatCompletions{model, input})
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (client Client) CreateChatCompletion(model string, input []Message) (*Creat
 		return nil, fmt.Errorf("response status code is not 200: %+v", res)
 	}
 
-	var data CreatedResponse
+	var data ResponseChatCompletion
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
 		return nil, err

@@ -77,7 +77,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		client := openai.NewClient(baseUrl, apiKey)
-		res, err := client.CreateChatCompletion(model, []openai.Message{
+		res, err := client.CreateChatCompletion(model, []openai.RequestMessage{
 			{
 				Role:    "developer",
 				Content: "You are an assistant that writes concise, conventional commit messages based on the provided git diff. Return the commit message without any quotes.",
