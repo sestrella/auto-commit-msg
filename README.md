@@ -79,6 +79,12 @@ configuration parameters are:
 - **`trace`**: When `true`, appends autocommitmsg execution traces to the commit message.
   - **Default**: `false`
 
+  The following metrics are appended to the commit message when trace is enabled:
+
+  - **`model`**: The model used to generate the commit message.
+  - **`response_time`**: The time it took to get a response from the AI model.
+  - **`execution_time`**: The total time it took for the `autocommitmsg` command to execute.
+
 Here is an example `.autocommitmsg.yml` file:
 
 ```yml
