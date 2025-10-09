@@ -8,3 +8,8 @@ inputs:
     overlays: [default]
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
+
+secretspec:
+  enable: true
+  provider: keyring
+  profile: development

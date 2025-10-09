@@ -1,13 +1,19 @@
-{ pkgs, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
-  dotenv.enable = true;
+  env.GEMINI_API_KEY = config.secretspec.secrets.GEMINI_API_KEY or "";
 
   packages = [
     pkgs.asciinema
     pkgs.cobra-cli
     pkgs.gitleaks
     pkgs.gomod2nix
+    pkgs.secretspec
   ];
 
   languages.go.enable = true;
