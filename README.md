@@ -62,7 +62,7 @@ variable is available.
 
 ## Configuration
 
-`autocommitmsg` can be configured via a `.autocommitmsg.yaml` file in
+`autocommitmsg` can be configured via a `.autocommitmsg.yml` file in
 the project's root directory or the user's home directory. The available
 configuration parameters are:
 
@@ -76,6 +76,8 @@ configuration parameters are:
   - **Default**: `gemini-2.5-flash`
 - **`diff-threshold`**: The line count threshold to switch between `short-model` and `long-model`.
   - **Default**: `500`
+- **`trace`**: When `true`, appends autocommitmsg execution traces to the commit message.
+  - **Default**: `false`
 
 Here is an example `.autocommitmsg.yaml` file:
 
@@ -85,6 +87,7 @@ api-key: "OPENAI_API_KEY"
 short-model: "o4-mini"
 long-model: "gpt-4.1"
 diff-threshold: 250
+trace: true
 ```
 
 ## Usage
