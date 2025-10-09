@@ -79,9 +79,9 @@ configuration parameters are:
 - **`trace`**: When `true`, appends autocommitmsg execution traces to the commit message.
   - **Default**: `false`
 
-Here is an example `.autocommitmsg.yaml` file:
+Here is an example `.autocommitmsg.yml` file:
 
-```yaml
+```yml
 base-url: "https://api.openai.com/v1"
 api-key: "OPENAI_API_KEY"
 short-model: "o4-mini"
