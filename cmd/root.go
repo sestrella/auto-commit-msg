@@ -37,7 +37,6 @@ var config Config
 var rootCmd = &cobra.Command{
 	Use:   "autocommitmsg COMMIT_MSG_FILE",
 	Short: "Generates a commit message from a git diff using AI",
-	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var executionTime time.Time
 		if config.Trace {
@@ -49,7 +48,11 @@ var rootCmd = &cobra.Command{
 			log.Println("pre-commit detected")
 		}
 
-		commitMsgFile := args[0]
+		var commitMsgFile string
+		if len(args) > 0 {
+			commitMsgFile = args[0]
+		}
+
 		var commitSource string
 		if preCommitDetected {
 			commitSource = os.Getenv("PRE_COMMIT_COMMIT_MSG_SOURCE")
@@ -127,9 +130,14 @@ var rootCmd = &cobra.Command{
 			executionDuration := time.Since(executionTime)
 			commitMsg = fmt.Sprintf("%s\n\nautocommitmsg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseDuration, executionDuration)
 		}
-		err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
-		if err != nil {
-			cobra.CheckErr(err)
+
+		if commitMsgFile == "" {
+			fmt.Println(commitMsg)
+		} else {
+			err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
+			if err != nil {
+				cobra.CheckErr(err)
+			}
 		}
 	},
 }
@@ -181,7 +189,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		log.Printf("Using config file: %s\n", viper.ConfigFileUsed())
 	}
 	if err := viper.Unmarshal(&config); err == nil {
 		cobra.CheckErr(err)
