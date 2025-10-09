@@ -6,7 +6,7 @@ Generates a commit message from a `git diff` using AI.
 
 **Features**
 
-- Supports OpenAI-compatible providers, with Gemini as the default.
+- Supports OpenAI-like providers, with Gemini as the default.
 - Improve commit messages by switching to a model based on diff size.
 
 ![generated-commit](assets/generated-commit.gif)
@@ -90,8 +90,8 @@ Here is an example `.autocommitmsg.yml` file:
 ```yml
 base-url: "https://api.openai.com/v1"
 api-key: "OPENAI_API_KEY"
-short-model: "o4-mini"
-long-model: "gpt-4.1"
+short-model: "gpt-4.1-mini"
+long-model: "o4-mini"
 diff-threshold: 250
 trace: true
 ```
