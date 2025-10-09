@@ -62,20 +62,10 @@ variable is available.
 
 ## Configuration
 
-`autocommitmsg` can be configured via a `.autocommitmsg.yml` file in
+`autocommitmsg` can be configured via a `.autocommitmsg.toml` file in
 the project's root directory or the user's home directory. The available
 configuration parameters are:
 
-- **`base-url`**: The base URL of the OpenAI-like provider.
-  - **Default**: `https://generativelanguage.googleapis.com/v1beta/openai`
-- **`api-key`**: The name of the environment variable that contains the API key.
-  - **Default**: `GEMINI_API_KEY`
-- **`short-model`**: The model to use for diffs with fewer lines than `diff-threshold`.
-  - **Default**: `gemini-2.5-flash-lite`
-- **`long-model`**: The model to use for diffs with more lines than `diff-threshold`.
-  - **Default**: `gemini-2.5-flash`
-- **`diff-threshold`**: The line count threshold to switch between `short-model` and `long-model`.
-  - **Default**: `500`
 - **`trace`**: When `true`, appends autocommitmsg execution traces to the commit message.
   - **Default**: `false`
 
@@ -85,15 +75,30 @@ configuration parameters are:
   - **`response_time`**: The time it took to get a response from the AI model.
   - **`execution_time`**: The total time it took for the `autocommitmsg` command to execute.
 
-Here is an example `.autocommitmsg.yml` file:
+- **`provider.base_url`**: The base URL of the OpenAI-like provider.
+  - **Default**: `https://generativelanguage.googleapis.com/v1beta/openai`
+- **`provider.api_key`**: The name of the environment variable that contains the API key.
+  - **Default**: `GEMINI_API_KEY`
+- **`diff.short_model`**: The model to use for diffs with fewer lines than `diff.threshold`.
+  - **Default**: `gemini-2.5-flash-lite`
+- **`diff.long_model`**: The model to use for diffs with more lines than `diff.threshold`.
+  - **Default**: `gemini-2.5-flash`
+- **`diff.threshold`**: The line count threshold to switch between `diff.short_model` and `diff.long_model`.
+  - **Default**: `500`
 
-```yml
-base-url: "https://api.openai.com/v1"
-api-key: "OPENAI_API_KEY"
-short-model: "gpt-4.1-mini"
-long-model: "o4-mini"
-diff-threshold: 250
-trace: true
+Here is an example `.autocommitmsg.toml` file:
+
+```toml
+trace = true
+
+[provider]
+base_url = "https://api.openai.com/v1"
+api_key = "OPENAI_API_KEY"
+
+[diff]
+short_model = "gpt-4.1-mini"
+long_model = "o4-mini"
+threshold = 250
 ```
 
 ## Usage

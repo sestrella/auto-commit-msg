@@ -13,7 +13,25 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+type Config struct {
+	Trace    bool           `mapstructure:"trace"`
+	Provider ProviderConfig `mapstructure:"provider"`
+	Diff     DiffConfig     `mapstructure:"diff"`
+}
+
+type ProviderConfig struct {
+	BaseUrl string `mapstructure:"base_url"`
+	ApiKey  string `mapstructure:"api_key"`
+}
+
+type DiffConfig struct {
+	ShortModel string `mapstructure:"short_model"`
+	LongModel  string `mapstructure:"long_model"`
+	Threshold  int    `mapstructure:"threshold"`
+}
+
+var configFile string
+var config Config
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -21,9 +39,8 @@ var rootCmd = &cobra.Command{
 	Short: "Generates a commit message from a git diff using AI",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		traceEnabled := viper.GetBool("trace")
 		var startExecutionTime time.Time
-		if traceEnabled {
+		if config.Trace {
 			startExecutionTime = time.Now()
 		}
 
@@ -52,40 +69,36 @@ var rootCmd = &cobra.Command{
 
 		gitDiffStr := string(gitDiff)
 		gitDiffLoc := strings.Count(gitDiffStr, "\n")
-		diffThreshold := viper.GetInt("diff-threshold")
+		diffThreshold := config.Diff.Threshold
 		var model string
 		if gitDiffLoc < diffThreshold {
-			model = viper.GetString("short-model")
+			model = config.Diff.ShortModel
 			if model == "" {
-				cobra.CheckErr("short-model cannot be empty")
+				cobra.CheckErr("short_model cannot be empty")
 			}
 			log.Printf("git diff LOC %d under %d threshold, using model for short diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		} else {
-			model = viper.GetString("long-model")
+			model = config.Diff.LongModel
 			if model == "" {
-				cobra.CheckErr("long-model cannot be empty")
+				cobra.CheckErr("long_model cannot be empty")
 			}
 			log.Printf("git diff LOC %d over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffThreshold, model)
 		}
-
-		apiKeyEnvName := viper.GetString("api-key")
-		if apiKeyEnvName == "" {
-			cobra.CheckErr("api-key environment variable name cannot be empty")
+		if config.Provider.ApiKey == "" {
+			cobra.CheckErr("api_key environment variable name cannot be empty")
 		}
 
-		apiKey := os.Getenv(apiKeyEnvName)
+		apiKey := os.Getenv(config.Provider.ApiKey)
 		if apiKey == "" {
-			cobra.CheckErr(fmt.Sprintf("environment variable %s is required", apiKeyEnvName))
+			cobra.CheckErr(fmt.Sprintf("environment variable %s is required", config.Provider.ApiKey))
+		}
+		if config.Provider.BaseUrl == "" {
+			cobra.CheckErr("base_url cannot be empty")
 		}
 
-		baseUrl := viper.GetString("base-url")
-		if baseUrl == "" {
-			cobra.CheckErr("base-url cannot be empty")
-		}
-
-		client := openai.NewClient(baseUrl, apiKey)
+		client := openai.NewClient(config.Provider.BaseUrl, apiKey)
 		var startResponseTime time.Time
-		if traceEnabled {
+		if config.Trace {
 			startResponseTime = time.Now()
 		}
 		res, err := client.CreateChatCompletion(model, []openai.RequestMessage{
@@ -99,7 +112,7 @@ var rootCmd = &cobra.Command{
 			},
 		})
 		var responseTime time.Duration
-		if traceEnabled {
+		if config.Trace {
 			responseTime = time.Since(startResponseTime)
 		}
 		if err != nil {
@@ -110,7 +123,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		commitMsg := res.Choices[0].Message.Content
-		if traceEnabled {
+		if config.Trace {
 			executionTime := time.Since(startExecutionTime)
 			commitMsg = fmt.Sprintf("%s\n\nautocommitmsg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseTime, executionTime)
 		}
@@ -138,14 +151,14 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .autocommitmsg.yml)")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is .autocommitmsg.toml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
+	if configFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		viper.SetConfigFile(configFile)
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()
@@ -154,21 +167,23 @@ func initConfig() {
 		// Search config in home directory with name ".autocommitmsg" (without extension).
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
-		viper.SetConfigType("yaml")
-		viper.SetConfigType("yml")
+		viper.SetConfigType("toml")
 		viper.SetConfigName(".autocommitmsg")
 	}
 
-	viper.SetDefault("base-url", "https://generativelanguage.googleapis.com/v1beta/openai")
-	viper.SetDefault("api-key", "GEMINI_API_KEY")
-	viper.SetDefault("short-model", "gemini-2.5-flash-lite")
-	viper.SetDefault("long-model", "gemini-2.5-flash")
-	viper.SetDefault("diff-threshold", 500)
 	viper.SetDefault("trace", false)
+	viper.SetDefault("provider.base_url", "https://generativelanguage.googleapis.com/v1beta/openai")
+	viper.SetDefault("provider.api_key", "GEMINI_API_KEY")
+	viper.SetDefault("diff.short_model", "gemini-2.5-flash-lite")
+	viper.SetDefault("diff.long_model", "gemini-2.5-flash")
+	viper.SetDefault("diff.threshold", 500)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	}
+	if err := viper.Unmarshal(&config); err == nil {
+		cobra.CheckErr(err)
 	}
 }
