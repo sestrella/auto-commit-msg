@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/sestrella/autocommitmsg/internal/openai"
 	"github.com/spf13/cobra"
@@ -20,6 +21,12 @@ var rootCmd = &cobra.Command{
 	Short: "Generates a commit message from a git diff using AI",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		traceEnabled := viper.GetBool("trace")
+		var startExecutionTime time.Time
+		if traceEnabled {
+			startExecutionTime = time.Now()
+		}
+
 		preCommitDetected := os.Getenv("PRE_COMMIT") == "1"
 		if preCommitDetected {
 			log.Println("pre-commit detected")
@@ -31,7 +38,7 @@ var rootCmd = &cobra.Command{
 			commitSource = os.Getenv("PRE_COMMIT_COMMIT_MSG_SOURCE")
 		}
 		if commitSource != "" {
-			log.Printf("Commit source '%s' is not empty, skipping commit generation\n", commitSource)
+			log.Printf("Commit source '%s' is not empty, skipping commit message generation\n", commitSource)
 			return
 		}
 
@@ -77,6 +84,10 @@ var rootCmd = &cobra.Command{
 		}
 
 		client := openai.NewClient(baseUrl, apiKey)
+		var startResponseTime time.Time
+		if traceEnabled {
+			startResponseTime = time.Now()
+		}
 		res, err := client.CreateChatCompletion(model, []openai.RequestMessage{
 			{
 				Role:    "developer",
@@ -87,6 +98,10 @@ var rootCmd = &cobra.Command{
 				Content: gitDiffStr,
 			},
 		})
+		var responseTime time.Duration
+		if traceEnabled {
+			responseTime = time.Since(startResponseTime)
+		}
 		if err != nil {
 			cobra.CheckErr(err)
 		}
@@ -95,6 +110,10 @@ var rootCmd = &cobra.Command{
 		}
 
 		commitMsg := res.Choices[0].Message.Content
+		if traceEnabled {
+			executionTime := time.Since(startExecutionTime)
+			commitMsg = fmt.Sprintf("%s\n\nautocommitmsg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseTime, executionTime)
+		}
 		err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
 		if err != nil {
 			cobra.CheckErr(err)
@@ -119,11 +138,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .autocommitmsg.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .autocommitmsg.yml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -149,6 +164,7 @@ func initConfig() {
 	viper.SetDefault("short-model", "gemini-2.5-flash-lite")
 	viper.SetDefault("long-model", "gemini-2.5-flash")
 	viper.SetDefault("diff-threshold", 500)
+	viper.SetDefault("trace", false)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
