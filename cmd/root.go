@@ -39,9 +39,9 @@ var rootCmd = &cobra.Command{
 	Short: "Generates a commit message from a git diff using AI",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var startExecutionTime time.Time
+		var executionTime time.Time
 		if config.Trace {
-			startExecutionTime = time.Now()
+			executionTime = time.Now()
 		}
 
 		preCommitDetected := os.Getenv("PRE_COMMIT") == "1"
@@ -97,9 +97,9 @@ var rootCmd = &cobra.Command{
 		}
 
 		client := openai.NewClient(config.Provider.BaseUrl, apiKey)
-		var startResponseTime time.Time
+		var responseTime time.Time
 		if config.Trace {
-			startResponseTime = time.Now()
+			responseTime = time.Now()
 		}
 		res, err := client.CreateChatCompletion(model, []openai.RequestMessage{
 			{
@@ -111,9 +111,9 @@ var rootCmd = &cobra.Command{
 				Content: gitDiffStr,
 			},
 		})
-		var responseTime time.Duration
+		var responseDuration time.Duration
 		if config.Trace {
-			responseTime = time.Since(startResponseTime)
+			responseDuration = time.Since(responseTime)
 		}
 		if err != nil {
 			cobra.CheckErr(err)
@@ -124,8 +124,8 @@ var rootCmd = &cobra.Command{
 
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
-			executionTime := time.Since(startExecutionTime)
-			commitMsg = fmt.Sprintf("%s\n\nautocommitmsg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseTime, executionTime)
+			executionDuration := time.Since(executionTime)
+			commitMsg = fmt.Sprintf("%s\n\nautocommitmsg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseDuration, executionDuration)
 		}
 		err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
 		if err != nil {
