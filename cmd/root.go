@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sestrella/autocommitmsg/internal/openai"
+	"github.com/sestrella/auto-commit-msg/internal/openai"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

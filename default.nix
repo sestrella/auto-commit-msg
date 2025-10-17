@@ -5,7 +5,7 @@
 }:
 
 pkgs.buildGoApplication {
-  pname = "autocommitmsg";
+  pname = "auto-commit-msg";
   version = lib.trim (builtins.readFile ./version.txt);
   src = nix-filter {
     root = ./.;
@@ -22,6 +22,6 @@ pkgs.buildGoApplication {
   meta = {
     description = "Generates a commit message from a git diff using AI";
     license = lib.licenses.mit;
-    mainProgram = "autocommitmsg";
+    mainProgram = "auto-commit-msg";
   };
 }
