@@ -35,7 +35,7 @@ var config Config
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "autocommitmsg COMMIT_MSG_FILE",
+	Use:   "auto-commit-msg COMMIT_MSG_FILE",
 	Short: "Generates a commit message from a git diff using AI",
 	Run: func(cmd *cobra.Command, args []string) {
 		var executionTime time.Time
@@ -128,7 +128,7 @@ var rootCmd = &cobra.Command{
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
 			executionDuration := time.Since(executionTime)
-			commitMsg = fmt.Sprintf("%s\n\nautocommitmsg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseDuration, executionDuration)
+			commitMsg = fmt.Sprintf("%s\n\nauto-commit-msg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseDuration, executionDuration)
 		}
 
 		if commitMsgFile == "" {
@@ -159,7 +159,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is .autocommitmsg.toml)")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is .auto-commit-msg.toml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -172,11 +172,11 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".autocommitmsg" (without extension).
+		// Search config in home directory with name ".auto-commit-msg" (without extension).
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 		viper.SetConfigType("toml")
-		viper.SetConfigName(".autocommitmsg")
+		viper.SetConfigName(".auto-commit-msg")
 	}
 
 	viper.SetDefault("trace", false)
