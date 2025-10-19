@@ -9,7 +9,7 @@ Generates a commit message from a `git diff` using AI.
 - Supports OpenAI-like providers, with Gemini as the default.
 - Improve commit messages by switching to a model based on diff size.
 
-![generated-commit](assets/generated-commit.gif)
+![demo](demo.gif)
 
 > [!NOTE] 
 > The [commit messages](https://github.com/sestrella/auto-commit-msg/commits/main/)
@@ -107,8 +107,6 @@ After setting `auto-commit-msg` as a [prepare-commit-msg] hook, invoking `git
 commit` without a commit message generates a commit message. If a commit message
 is given, `auto-commit-msg` does not generate a commit message and instead uses
 the one provided by the user.
-
-![custom-commit](assets/custom-commit.gif)
 
 ## License
 
