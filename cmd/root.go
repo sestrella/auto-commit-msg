@@ -30,6 +30,22 @@ type DiffConfig struct {
 	Threshold  int    `mapstructure:"threshold"`
 }
 
+type TraceInfo struct {
+	Version       string
+	Model         string
+	ResponseTime  time.Duration
+	ExecutionTime time.Duration
+}
+
+func (traceInfo TraceInfo) String() string {
+	return fmt.Sprintf("auto-commit-msg(version=%s,model=%s,response_time=%s,execution_time=%s)",
+		strings.TrimSpace(traceInfo.Version),
+		traceInfo.Model,
+		traceInfo.ResponseTime,
+		traceInfo.ExecutionTime,
+	)
+}
+
 var configFile string
 var config Config
 
@@ -128,7 +144,12 @@ var rootCmd = &cobra.Command{
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
 			executionDuration := time.Since(executionTime)
-			commitMsg = fmt.Sprintf("%s\n\nauto-commit-msg(model=%s,response_time=%s,execution_time=%s)", commitMsg, model, responseDuration, executionDuration)
+			commitMsg = fmt.Sprintf("%s\n\n%s", commitMsg, TraceInfo{
+				Version:       cmd.Version,
+				Model:         model,
+				ResponseTime:  responseDuration,
+				ExecutionTime: executionDuration,
+			})
 		}
 
 		if commitMsgFile == "" {
