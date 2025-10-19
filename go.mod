@@ -1,4 +1,4 @@
-module github.com/sestrella/autocommitmsg
+module github.com/sestrella/auto-commit-msg
 
 go 1.25.0
 
