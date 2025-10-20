@@ -37,14 +37,14 @@ type TraceInfo struct {
 	ExecutionTime time.Duration
 }
 
-func (traceInfo TraceInfo) String() string {
-	return fmt.Sprintf("auto-commit-msg(version=%s,model=%s,response_time=%s,execution_time=%s)",
-		strings.TrimSpace(traceInfo.Version),
-		traceInfo.Model,
-		traceInfo.ResponseTime,
-		traceInfo.ExecutionTime,
-	)
-}
+// func (traceInfo TraceInfo) String() string {
+// 	return fmt.Sprintf("auto-commit-msg(version=%s,model=%s,response_time=%s,execution_time=%s)",
+// 		strings.TrimSpace(traceInfo.Version),
+// 		traceInfo.Model,
+// 		traceInfo.ResponseTime,
+// 		traceInfo.ExecutionTime,
+// 	)
+// }
 
 var configFile string
 var config Config
@@ -144,8 +144,8 @@ var rootCmd = &cobra.Command{
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
 			executionDuration := time.Since(executionTime)
-			commitMsg = fmt.Sprintf("%s\n\n%s", commitMsg, TraceInfo{
-				Version:       cmd.Version,
+			commitMsg = fmt.Sprintf("%s\n\nauto-commit-msg%+v", commitMsg, TraceInfo{
+				Version:       strings.TrimSpace(cmd.Version),
 				Model:         model,
 				ResponseTime:  responseDuration,
 				ExecutionTime: executionDuration,
@@ -195,8 +195,8 @@ func initConfig() {
 
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
-		viper.SetConfigType("toml")
 		viper.SetConfigName(".auto-commit-msg")
+		viper.SetConfigType("toml")
 	}
 
 	viper.SetDefault("trace", false)
