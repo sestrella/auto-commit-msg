@@ -71,9 +71,10 @@ configuration parameters are:
 
   The following metrics are appended to the commit message when trace is enabled:
 
-  - **`model`**: The model used to generate the commit message.
-  - **`response_time`**: The time it took to get a response from the AI model.
-  - **`execution_time`**: The total time it took for the `auto-commit-msg` command to execute.
+  - **`Version`**: The version of the `auto-commit-msg` command used.
+  - **`Model`**: The model used to generate the commit message.
+  - **`ResponseTime`**: The time it took to get a response from the AI model.
+  - **`ExecutionTime`**: The total time it took for the `auto-commit-msg` command to execute.
 
 - **`provider.base_url`**: The base URL of the OpenAI-like provider.
   - **Default**: `https://generativelanguage.googleapis.com/v1beta/openai`
