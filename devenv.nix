@@ -13,6 +13,7 @@
     pkgs.cobra-cli
     pkgs.gitleaks
     pkgs.gomod2nix
+    pkgs.goreleaser
     pkgs.secretspec
   ];
 

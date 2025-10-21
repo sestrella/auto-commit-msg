@@ -13,3 +13,5 @@ devenv.local.nix
 auto-commit-msg
 result
 templates/default/devenv.lock
+# Added by goreleaser init:
+dist/
