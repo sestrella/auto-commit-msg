@@ -8,11 +8,12 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
@@ -20,6 +21,7 @@ jobs:
           go-version-file: go.mod
       - uses: goreleaser/goreleaser-action@v6
         with:
+          # TODO: remove the --snapshot argument
           args: release --snapshot --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

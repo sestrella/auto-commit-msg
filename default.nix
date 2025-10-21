@@ -18,6 +18,7 @@ pkgs.buildGoApplication {
       ./version.txt
     ];
   };
+  # TODO: change the name of the binary
   modules = ./gomod2nix.toml;
   meta = {
     description = "Generates a commit message from a git diff using AI";
