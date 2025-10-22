@@ -18,11 +18,13 @@ pkgs.buildGoApplication {
       ./version.txt
     ];
   };
-  # TODO: change the name of the binary
   modules = ./gomod2nix.toml;
+  postInstall = ''
+    mv $out/bin/auto-commit-msg $out/bin/acm
+  '';
   meta = {
     description = "Generates a commit message from a git diff using AI";
     license = lib.licenses.mit;
-    mainProgram = "auto-commit-msg";
+    mainProgram = "acm";
   };
 }
