@@ -37,15 +37,6 @@ type TraceInfo struct {
 	ExecutionTime time.Duration
 }
 
-// func (traceInfo TraceInfo) String() string {
-// 	return fmt.Sprintf("auto-commit-msg(version=%s,model=%s,response_time=%s,execution_time=%s)",
-// 		strings.TrimSpace(traceInfo.Version),
-// 		traceInfo.Model,
-// 		traceInfo.ResponseTime,
-// 		traceInfo.ExecutionTime,
-// 	)
-// }
-
 var configFile string
 var config Config
 
