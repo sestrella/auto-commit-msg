@@ -14,8 +14,7 @@ before:
     - go mod tidy
 
 builds:
-  - binary: acm
-    env:
+  - env:
       - CGO_ENABLED=0
     goos:
       - darwin
