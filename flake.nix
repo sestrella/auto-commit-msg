@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "Generates a commit message from a `git diff` using AI";
 
   inputs = {
     gomod2nix = {
@@ -13,18 +13,16 @@
 
   outputs =
     {
-      self,
       gomod2nix,
       nix-filter,
       nixpkgs,
+      self,
       systems,
       ...
     }:
-    let
-      forAllSystems = nixpkgs.lib.genAttrs (import systems);
-    in
+
     {
-      packages = forAllSystems (
+      packages = nixpkgs.lib.genAttrs (import systems) (
         system:
         let
           pkgs = import nixpkgs {
