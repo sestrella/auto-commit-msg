@@ -85,6 +85,7 @@ var rootCmd = &cobra.Command{
 		}
 		shortStatStr := string(shortStat)
 
+		// TODO: Get insertions and deletions using a single regex, take into account num of files?
 		insertionMatches := regexp.MustCompile(`(\d+)\s+insertions?\(\+\)`).FindStringSubmatch(shortStatStr)
 		insertions := 0
 		if len(insertionMatches) > 1 {
