@@ -202,7 +202,7 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.Printf("Using config file: %s\n", viper.ConfigFileUsed())
 	}
-	if err := viper.Unmarshal(&config); err == nil {
+	if err := viper.Unmarshal(&config); err != nil {
 		cobra.CheckErr(err)
 	}
 }
