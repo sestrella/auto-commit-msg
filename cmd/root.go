@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -77,22 +79,45 @@ var rootCmd = &cobra.Command{
 			cobra.CheckErr("git diff is empty")
 		}
 
-		gitDiffStr := string(gitDiff)
-		gitDiffLoc := strings.Count(gitDiffStr, "\n")
-		diffThreshold := config.Diff.Threshold
+		shortStat, err := exec.Command("git", "diff", "--cached", "--shortstat").Output()
+		if err != nil {
+			cobra.CheckErr(err)
+		}
+		shortStatStr := string(shortStat)
+
+		insertionMatches := regexp.MustCompile(`(\d+)\s+insertions?\(\+\)`).FindStringSubmatch(shortStatStr)
+		insertions := 0
+		if len(insertionMatches) > 1 {
+			insertions, err = strconv.Atoi(insertionMatches[1])
+			if err != nil {
+				cobra.CheckErr(err)
+			}
+		}
+
+		deletionMatches := regexp.MustCompile(`(\d+)\s+deletions?\(\-\)`).FindStringSubmatch(shortStatStr)
+		deletions := 0
+		if len(deletionMatches) > 1 {
+			deletions, err = strconv.Atoi(deletionMatches[1])
+			if err != nil {
+				cobra.CheckErr(err)
+			}
+		}
+
+		totalChanges := insertions + deletions
+		totalChangesThreshold := config.Diff.Threshold
 		var model string
-		if gitDiffLoc < diffThreshold {
+		if totalChanges < totalChangesThreshold {
 			model = config.Diff.ShortModel
 			if model == "" {
 				cobra.CheckErr("short_model cannot be empty")
 			}
-			log.Printf("git diff LOC %d under %d threshold, using model for short diffs: %s\n", gitDiffLoc, diffThreshold, model)
+			log.Printf("git diff total changes %d under %d threshold, using model for short diffs: %s\n", totalChanges, totalChangesThreshold, model)
 		} else {
 			model = config.Diff.LongModel
 			if model == "" {
 				cobra.CheckErr("long_model cannot be empty")
 			}
-			log.Printf("git diff LOC %d over %d threshold, using model for long diffs: %s\n", gitDiffLoc, diffThreshold, model)
+			log.Printf("git diff total changes %d over %d threshold, using model for long diffs: %s\n", totalChanges, totalChangesThreshold, model)
 		}
 		if config.Provider.ApiKey == "" {
 			cobra.CheckErr("api_key environment variable name cannot be empty")
@@ -118,7 +143,7 @@ var rootCmd = &cobra.Command{
 			},
 			{
 				Role:    "user",
-				Content: gitDiffStr,
+				Content: string(gitDiff),
 			},
 		})
 		var responseDuration time.Duration
@@ -195,7 +220,7 @@ func initConfig() {
 	viper.SetDefault("provider.api_key", "GEMINI_API_KEY")
 	viper.SetDefault("diff.short_model", "gemini-2.5-flash-lite")
 	viper.SetDefault("diff.long_model", "gemini-2.5-flash")
-	viper.SetDefault("diff.threshold", 500)
+	viper.SetDefault("diff.threshold", 200)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
