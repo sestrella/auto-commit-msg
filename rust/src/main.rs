@@ -6,16 +6,23 @@ struct OpenAIClient {
     base_url: reqwest::Url,
 }
 
-#[derive(Debug, serde::Deserialize)]
-struct Completion {}
-
 #[derive(serde::Serialize)]
-struct Foo {
+struct Chat {}
+
+#[derive(Debug, serde::Deserialize)]
+struct Completion {
     choices: Vec<Choice>,
 }
 
-#[derive(serde::Serialize)]
-struct Choice {}
+#[derive(Debug, serde::Deserialize)]
+struct Choice {
+    message: Message
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Message {
+    content: String
+}
 
 impl OpenAIClient {
     fn build(token: String, base_url: reqwest::Url) -> Result<Self> {
@@ -27,9 +34,9 @@ impl OpenAIClient {
         Ok(Self { client, base_url })
     }
 
-    async fn create_chat_completion(&self, foo: Foo) -> Result<Completion> {
+    async fn create_chat_completion(&self, chat: Chat) -> Result<Completion> {
         let url = self.base_url.join("/chat/completions")?;
-        let completion =self.client.post(url).json(&foo).send().await?.json().await?;
+        let completion =self.client.post(url).json(&chat).send().await?.json().await?;
         Ok(completion)
     }
 }
@@ -39,7 +46,7 @@ async fn main() -> Result<()> {
     let token = std::env::var("GEMINI_API_KEY")?;
     let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai")?;
     let client = OpenAIClient::build(token, base_url)?;
-    let resp = client.create_chat_completion(Foo{choices: vec!()}).await?;
+    let resp = client.create_chat_completion(Chat{}).await?;
     println!("{resp:#?}");
     Ok(())
 }
