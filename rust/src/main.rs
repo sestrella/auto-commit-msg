@@ -1,5 +1,6 @@
 use anyhow::Result;
 use reqwest::header;
+use std::env;
 use std::process::Command;
 
 struct OpenAIClient {
@@ -61,8 +62,11 @@ impl OpenAIClient {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args = env::args();
+
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
     let diff = String::from_utf8(output.stdout)?;
+    println!("{diff}");
 
     let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
     let token = std::env::var("GEMINI_API_KEY")?;
@@ -87,13 +91,14 @@ async fn main() -> Result<()> {
             ],
         })
         .await?;
-    let message: Vec<&ChoiceMessage> = completion
+    let messages: Vec<&ChoiceMessage> = completion
         .choices
         .iter()
         .filter(|choice| choice.message.role == "assistant")
         .map(|choice| &choice.message)
         .collect();
-    println!("{}", message[0].content);
+    let message = messages.first().expect("TODO");
+    println!("{}", message.content);
 
     Ok(())
 }
