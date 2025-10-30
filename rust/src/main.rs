@@ -26,11 +26,12 @@ struct Completion {
 
 #[derive(serde::Deserialize)]
 struct Choice {
-    message: Message,
+    message: ChoiceMessage,
 }
 
 #[derive(serde::Deserialize)]
-struct Message {
+struct ChoiceMessage {
+    role: String,
     content: String,
 }
 
@@ -66,7 +67,7 @@ async fn main() -> Result<()> {
     let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
     let token = std::env::var("GEMINI_API_KEY")?;
     let client = OpenAIClient::build(base_url, token)?;
-    let resp = client
+    let completion = client
         .create_chat_completion(Chat {
             model: "gemini-2.5-flash-lite".to_string(),
             messages: vec![
@@ -86,7 +87,13 @@ async fn main() -> Result<()> {
             ],
         })
         .await?;
-    println!("{}", resp.choices[0].message.content);
+    let message: Vec<&ChoiceMessage> = completion
+        .choices
+        .iter()
+        .filter(|choice| choice.message.role == "assistant")
+        .map(|choice| &choice.message)
+        .collect();
+    println!("{}", message[0].content);
 
     Ok(())
 }
