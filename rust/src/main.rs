@@ -4,7 +4,7 @@ use std::env;
 use std::process::Command;
 
 struct OpenAIClient {
-    client: reqwest::Client,
+    client: reqwest::blocking::Client,
     base_url: reqwest::Url,
 }
 
@@ -40,29 +40,21 @@ impl OpenAIClient {
     fn build(base_url: reqwest::Url, token: String) -> Result<Self> {
         let mut headers = header::HeaderMap::new();
         headers.insert(header::AUTHORIZATION, format!("Bearer {token}").parse()?);
-        let client = reqwest::Client::builder()
+        let client = reqwest::blocking::Client::builder()
             .default_headers(headers)
             .build()?;
         Ok(Self { client, base_url })
     }
 
-    async fn create_chat_completion(&self, chat: Chat) -> Result<Completion> {
+    fn create_chat_completion(&self, chat: Chat) -> Result<Completion> {
         let url = self.base_url.join("chat/completions")?;
-        let completion = self
-            .client
-            .post(url)
-            .json(&chat)
-            .send()
-            .await?
-            .json()
-            .await?;
+        let completion = self.client.post(url).json(&chat).send()?.json()?;
         Ok(completion)
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let args = env::args();
+fn main() -> Result<()> {
+    let _args = env::args();
 
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
     let diff = String::from_utf8(output.stdout)?;
@@ -71,26 +63,24 @@ async fn main() -> Result<()> {
     let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
     let token = std::env::var("GEMINI_API_KEY")?;
     let client = OpenAIClient::build(base_url, token)?;
-    let completion = client
-        .create_chat_completion(Chat {
-            model: "gemini-2.5-flash-lite".to_string(),
-            messages: vec![
-                ChatMessage {
-                    role: "developer".to_string(),
-                    content: r#"
+    let completion = client.create_chat_completion(Chat {
+        model: "gemini-2.5-flash-lite".to_string(),
+        messages: vec![
+            ChatMessage {
+                role: "developer".to_string(),
+                content: r#"
 				    You are an assistant that writes concise, conventional commit
                     messages based on the provided git diff. Return the commit
                     message without any quotes.
                     "#
-                    .to_string(),
-                },
-                ChatMessage {
-                    role: "user".to_string(),
-                    content: diff,
-                },
-            ],
-        })
-        .await?;
+                .to_string(),
+            },
+            ChatMessage {
+                role: "user".to_string(),
+                content: diff,
+            },
+        ],
+    })?;
     let messages: Vec<&ChoiceMessage> = completion
         .choices
         .iter()
