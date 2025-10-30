@@ -1,5 +1,6 @@
 use anyhow::Result;
 use reqwest::header;
+use std::process::Command;
 
 struct OpenAIClient {
     client: reqwest::Client,
@@ -8,35 +9,35 @@ struct OpenAIClient {
 
 #[derive(serde::Serialize)]
 struct Chat {
-    model: String,
-    messages: Vec<ChatMessage>,
+    pub model: String,
+    pub messages: Vec<ChatMessage>,
 }
 
 #[derive(serde::Serialize)]
 struct ChatMessage {
-    role: String,
-    content: String,
+    pub role: String,
+    pub content: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct Completion {
-    choices: Vec<Choice>,
+    pub choices: Vec<Choice>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct Choice {
-    message: Message,
+    pub message: Message,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct Message {
-    content: String,
+    pub content: String,
 }
 
 impl OpenAIClient {
     fn build(base_url: reqwest::Url, token: String) -> Result<Self> {
         let mut headers = header::HeaderMap::new();
-        headers.insert(header::AUTHORIZATION, format!("Bearer {}", token).parse()?);
+        headers.insert(header::AUTHORIZATION, format!("Bearer {token}").parse()?);
         let client = reqwest::Client::builder()
             .default_headers(headers)
             .build()?;
@@ -44,7 +45,7 @@ impl OpenAIClient {
     }
 
     async fn create_chat_completion(&self, chat: Chat) -> Result<Completion> {
-        let url = self.base_url.join("/chat/completions")?;
+        let url = self.base_url.join("chat/completions")?;
         let completion = self
             .client
             .post(url)
@@ -59,12 +60,15 @@ impl OpenAIClient {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai")?;
+    let output = Command::new("git").arg("diff").arg("--cached").output()?;
+    let diff = String::from_utf8(output.stdout)?;
+
+    let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
     let token = std::env::var("GEMINI_API_KEY")?;
     let client = OpenAIClient::build(base_url, token)?;
     let resp = client
         .create_chat_completion(Chat {
-            model: "gemini-2.5-flash".to_string(),
+            model: "gemini-2.5-flash-lite".to_string(),
             messages: vec![
                 ChatMessage {
                     role: "developer".to_string(),
@@ -77,11 +81,12 @@ async fn main() -> Result<()> {
                 },
                 ChatMessage {
                     role: "user".to_string(),
-                    content: "".to_string(),
+                    content: diff,
                 },
             ],
         })
         .await?;
-    println!("{resp:#?}");
+    println!("{}", resp.choices[0].message.content);
+
     Ok(())
 }
