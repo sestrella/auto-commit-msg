@@ -9,29 +9,29 @@ struct OpenAIClient {
 
 #[derive(serde::Serialize)]
 struct Chat {
-    pub model: String,
-    pub messages: Vec<ChatMessage>,
+    model: String,
+    messages: Vec<ChatMessage>,
 }
 
 #[derive(serde::Serialize)]
 struct ChatMessage {
-    pub role: String,
-    pub content: String,
+    role: String,
+    content: String,
 }
 
 #[derive(serde::Deserialize)]
 struct Completion {
-    pub choices: Vec<Choice>,
+    choices: Vec<Choice>,
 }
 
 #[derive(serde::Deserialize)]
 struct Choice {
-    pub message: Message,
+    message: Message,
 }
 
 #[derive(serde::Deserialize)]
 struct Message {
-    pub content: String,
+    content: String,
 }
 
 impl OpenAIClient {
