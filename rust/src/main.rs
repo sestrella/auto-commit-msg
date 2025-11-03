@@ -2,6 +2,7 @@ use anyhow::Result;
 use reqwest::header;
 use std::env;
 use std::process::Command;
+use std::time::Instant;
 
 struct OpenAIClient {
     client: reqwest::blocking::Client,
@@ -54,6 +55,7 @@ impl OpenAIClient {
 }
 
 fn main() -> Result<()> {
+    let start = Instant::now();
     let _args = env::args();
 
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
@@ -63,6 +65,8 @@ fn main() -> Result<()> {
     let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
     let token = std::env::var("GEMINI_API_KEY")?;
     let client = OpenAIClient::build(base_url, token)?;
+
+    let response_start = Instant::now();
     let completion = client.create_chat_completion(Chat {
         model: "gemini-2.5-flash-lite".to_string(),
         messages: vec![
@@ -81,6 +85,9 @@ fn main() -> Result<()> {
             },
         ],
     })?;
+    let response_end = response_start.elapsed();
+    println!("Response time: {response_end:?}");
+
     let messages: Vec<&ChoiceMessage> = completion
         .choices
         .iter()
@@ -89,6 +96,9 @@ fn main() -> Result<()> {
         .collect();
     let message = messages.first().expect("TODO");
     println!("{}", message.content);
+
+    let end = start.elapsed();
+    println!("Execution time: {end:?}");
 
     Ok(())
 }
