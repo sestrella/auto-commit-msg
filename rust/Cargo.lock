@@ -21,6 +21,7 @@ dependencies = [
  "anyhow",
  "reqwest",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

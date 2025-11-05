@@ -1,8 +1,9 @@
 use anyhow::Result;
 use reqwest::header;
-use std::env;
+use serde::ser::SerializeStruct;
 use std::process::Command;
-use std::time::Instant;
+use std::time::{Duration, Instant};
+use std::{env, fs};
 
 struct OpenAIClient {
     client: reqwest::blocking::Client,
@@ -37,6 +38,37 @@ struct ChoiceMessage {
     content: String,
 }
 
+struct Trace {
+    model: String,
+    response_time: TraceDuration,
+    execution_time: TraceDuration,
+}
+
+impl serde::Serialize for Trace {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Trace", 3)?;
+        state.serialize_field("model", &self.model)?;
+        state.serialize_field("response_time", &self.response_time)?;
+        state.serialize_field("execution_time", &self.execution_time)?;
+        state.end()
+    }
+}
+
+struct TraceDuration(Duration);
+
+impl serde::Serialize for TraceDuration {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let secs = self.0.as_secs_f64();
+        serializer.serialize_f64(secs)
+    }
+}
+
 impl OpenAIClient {
     fn build(base_url: reqwest::Url, token: String) -> Result<Self> {
         let mut headers = header::HeaderMap::new();
@@ -55,18 +87,16 @@ impl OpenAIClient {
 }
 
 fn main() -> Result<()> {
-    let start = Instant::now();
-    let _args = env::args();
+    let execution_duration = Instant::now();
 
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
     let diff = String::from_utf8(output.stdout)?;
-    println!("{diff}");
 
     let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
     let token = std::env::var("GEMINI_API_KEY")?;
     let client = OpenAIClient::build(base_url, token)?;
 
-    let response_start = Instant::now();
+    let response_duration = Instant::now();
     let completion = client.create_chat_completion(Chat {
         model: "gemini-2.5-flash-lite".to_string(),
         messages: vec![
@@ -85,8 +115,7 @@ fn main() -> Result<()> {
             },
         ],
     })?;
-    let response_end = response_start.elapsed();
-    println!("Response time: {response_end:?}");
+    let response_time = response_duration.elapsed();
 
     let messages: Vec<&ChoiceMessage> = completion
         .choices
@@ -95,10 +124,19 @@ fn main() -> Result<()> {
         .map(|choice| &choice.message)
         .collect();
     let message = messages.first().expect("TODO");
-    println!("{}", message.content);
+    let mut commit_msg = message.content.clone();
+    commit_msg.push_str("\n---\n\"auto-commit-msg\":");
+    commit_msg.push_str(&serde_json::to_string(&Trace {
+        model: "gemini-2.5-flash-lite".to_string(),
+        response_time: TraceDuration(response_time),
+        execution_time: TraceDuration(execution_duration.elapsed()),
+    })?);
 
-    let end = start.elapsed();
-    println!("Execution time: {end:?}");
+    if let Some(commit_msg_file) = env::args().nth(1) {
+        fs::write(commit_msg_file, commit_msg)?;
+    } else {
+        println!("{commit_msg}");
+    }
 
     Ok(())
 }
