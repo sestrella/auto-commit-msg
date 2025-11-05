@@ -10,6 +10,29 @@ struct OpenAIClient {
     base_url: reqwest::Url,
 }
 
+#[derive(serde::Deserialize)]
+struct Config {
+    trace: bool,
+    provider: ProviderConfig,
+    diff: DiffConfig,
+}
+
+#[derive(serde::Deserialize)]
+struct ProviderConfig {
+    #[serde(default = "default_base_url")]
+    base_url: String,
+    api_key: String,
+}
+
+fn default_base_url() -> String {
+    "https://generativelanguage.googleapis.com/v1beta/openai/".to_string()
+}
+
+#[derive(serde::Deserialize)]
+struct DiffConfig {
+    short_model: String,
+}
+
 #[derive(serde::Serialize)]
 struct Chat {
     model: String,
@@ -90,16 +113,23 @@ impl OpenAIClient {
 fn main() -> Result<()> {
     let execution_duration = Instant::now();
 
+    let config_content = fs::read_to_string(".auto-commit-msg.toml")?;
+    let config: Config = toml::from_str(&config_content)?;
+
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
     let diff = String::from_utf8(output.stdout)?;
 
-    let base_url = reqwest::Url::parse("https://generativelanguage.googleapis.com/v1beta/openai/")?;
-    let token = std::env::var("GEMINI_API_KEY")?;
+    let base_url = reqwest::Url::parse(&config.provider.base_url)?;
+    let token = std::env::var(&config.provider.api_key)?;
     let client = OpenAIClient::build(base_url, token)?;
 
-    let response_duration = Instant::now();
+    let mut response_duration = None;
+    if config.trace {
+        response_duration = Some(Instant::now());
+    }
+
     let completion = client.create_chat_completion(Chat {
-        model: "gemini-2.5-flash-lite".to_string(),
+        model: config.diff.short_model,
         messages: vec![
             ChatMessage {
                 role: "developer".to_string(),
@@ -116,7 +146,7 @@ fn main() -> Result<()> {
             },
         ],
     })?;
-    let response_time = response_duration.elapsed();
+    let response_time = response_duration.map(|foo| foo.elapsed());
 
     let messages: Vec<&ChoiceMessage> = completion
         .choices
@@ -126,12 +156,14 @@ fn main() -> Result<()> {
         .collect();
     let message = messages.first().expect("at least one message is expected");
     let mut commit_msg = message.content.clone();
-    commit_msg.push_str("\n---\n");
-    commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {
-        model: "gemini-2.5-flash-lite".to_string(),
-        response_time: TraceDuration(response_time),
-        execution_time: TraceDuration(execution_duration.elapsed()),
-    }))?);
+    if let Some(bar) = response_time {
+        commit_msg.push_str("\n---\n");
+        commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {
+            model: "gemini-2.5-flash-lite".to_string(),
+            response_time: TraceDuration(bar),
+            execution_time: TraceDuration(execution_duration.elapsed()),
+        }))?);
+    }
 
     if let Some(commit_msg_file) = env::args().nth(1) {
         fs::write(commit_msg_file, commit_msg)?;
