@@ -38,23 +38,24 @@ struct ChoiceMessage {
     content: String,
 }
 
-struct Trace {
-    model: String,
-    response_time: TraceDuration,
-    execution_time: TraceDuration,
-}
+struct TraceWrapper(Trace);
 
-impl serde::Serialize for Trace {
+impl serde::Serialize for TraceWrapper {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_struct("Trace", 3)?;
-        state.serialize_field("model", &self.model)?;
-        state.serialize_field("response_time", &self.response_time)?;
-        state.serialize_field("execution_time", &self.execution_time)?;
-        state.end()
+        let mut s = serializer.serialize_struct("TraceWrapper", 1)?;
+        s.serialize_field("auto-commit-msg", &self.0)?;
+        s.end()
     }
+}
+
+#[derive(serde::Serialize)]
+struct Trace {
+    model: String,
+    response_time: TraceDuration,
+    execution_time: TraceDuration,
 }
 
 struct TraceDuration(Duration);
@@ -125,12 +126,12 @@ fn main() -> Result<()> {
         .collect();
     let message = messages.first().expect("TODO");
     let mut commit_msg = message.content.clone();
-    commit_msg.push_str("\n---\n\"auto-commit-msg\":");
-    commit_msg.push_str(&serde_json::to_string(&Trace {
+    commit_msg.push_str("\n---\n");
+    commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {
         model: "gemini-2.5-flash-lite".to_string(),
         response_time: TraceDuration(response_time),
         execution_time: TraceDuration(execution_duration.elapsed()),
-    })?);
+    }))?);
 
     if let Some(commit_msg_file) = env::args().nth(1) {
         fs::write(commit_msg_file, commit_msg)?;
