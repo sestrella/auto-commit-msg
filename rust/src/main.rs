@@ -124,7 +124,7 @@ fn main() -> Result<()> {
         .filter(|choice| choice.message.role == "assistant")
         .map(|choice| &choice.message)
         .collect();
-    let message = messages.first().expect("TODO");
+    let message = messages.first().expect("at least one message is expected");
     let mut commit_msg = message.content.clone();
     commit_msg.push_str("\n---\n");
     commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {

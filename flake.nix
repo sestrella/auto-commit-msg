@@ -34,7 +34,9 @@
           };
         in
         {
-          default = pkgs.callPackage ./default.nix { };
+          "auto-commit-msg/rust" = pkgs.callPackage ./rust/default.nix { };
+          auto-commit-msg = pkgs.callPackage ./default.nix { };
+          default = self.packages.${system}.auto-commit-msg;
         }
       );
 
