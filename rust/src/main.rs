@@ -1,6 +1,7 @@
 use anyhow::Result;
 use reqwest::header;
 use serde::ser::SerializeStruct;
+use std::path::Path;
 use std::process::Command;
 use std::time::{Duration, Instant};
 use std::{env, fs};
@@ -10,17 +11,38 @@ struct OpenAIClient {
     base_url: reqwest::Url,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct Config {
+    #[serde(default = "default_trace")]
     trace: bool,
+    #[serde(default = "default_provider")]
     provider: ProviderConfig,
+    #[serde(default = "default_diff")]
     diff: DiffConfig,
 }
 
-#[derive(serde::Deserialize)]
+fn default_trace() -> bool {
+    false
+}
+
+fn default_provider() -> ProviderConfig {
+    ProviderConfig{
+        base_url: default_base_url(),
+        api_key: default_api_key(),
+    }
+}
+
+fn default_diff() -> DiffConfig {
+    DiffConfig {
+        short_model: default_short_model(),
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
 struct ProviderConfig {
     #[serde(default = "default_base_url")]
     base_url: String,
+    #[serde(default = "default_api_key")]
     api_key: String,
 }
 
@@ -28,9 +50,18 @@ fn default_base_url() -> String {
     "https://generativelanguage.googleapis.com/v1beta/openai/".to_string()
 }
 
-#[derive(serde::Deserialize)]
+fn default_api_key() -> String {
+    "GEMINI_API_KEY".to_string()
+}
+
+#[derive(Debug, serde::Deserialize)]
 struct DiffConfig {
+    #[serde(default = "default_short_model")]
     short_model: String,
+}
+
+fn default_short_model() -> String {
+    "gemini-2.5-flash-lite".to_string()
 }
 
 #[derive(serde::Serialize)]
@@ -113,7 +144,10 @@ impl OpenAIClient {
 fn main() -> Result<()> {
     let execution_duration = Instant::now();
 
-    let config_content = fs::read_to_string(".auto-commit-msg.toml")?;
+    let mut config_content = "".to_string();
+    if Path::new(".auto-commit-msg.toml").exists() {
+        config_content = fs::read_to_string(".auto-commit-msg.toml")?;
+    }
     let config: Config = toml::from_str(&config_content)?;
 
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
