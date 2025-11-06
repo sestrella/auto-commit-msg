@@ -1,6 +1,8 @@
 use anyhow::Result;
+use log::info;
 use reqwest::header;
 use serde::ser::SerializeStruct;
+use std::default::Default;
 use std::path::Path;
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -11,13 +13,13 @@ struct OpenAIClient {
     base_url: reqwest::Url,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct Config {
     #[serde(default = "default_trace")]
     trace: bool,
-    #[serde(default = "default_provider")]
+    #[serde(default)]
     provider: ProviderConfig,
-    #[serde(default = "default_diff")]
+    #[serde(default)]
     diff: DiffConfig,
 }
 
@@ -25,25 +27,21 @@ fn default_trace() -> bool {
     false
 }
 
-fn default_provider() -> ProviderConfig {
-    ProviderConfig {
-        base_url: default_base_url(),
-        api_key: default_api_key(),
-    }
-}
-
-fn default_diff() -> DiffConfig {
-    DiffConfig {
-        short_model: default_short_model(),
-    }
-}
-
-#[derive(Debug, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct ProviderConfig {
     #[serde(default = "default_base_url")]
     base_url: String,
     #[serde(default = "default_api_key")]
     api_key: String,
+}
+
+impl Default for ProviderConfig {
+    fn default() -> Self {
+        Self {
+            base_url: default_base_url(),
+            api_key: default_api_key(),
+        }
+    }
 }
 
 fn default_base_url() -> String {
@@ -54,14 +52,36 @@ fn default_api_key() -> String {
     "GEMINI_API_KEY".to_string()
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(serde::Deserialize)]
 struct DiffConfig {
     #[serde(default = "default_short_model")]
     short_model: String,
+    #[serde(default = "default_long_model")]
+    long_model: String,
+    #[serde(default = "default_threshold")]
+    threshold: u32,
+}
+
+impl Default for DiffConfig {
+    fn default() -> Self {
+        Self {
+            short_model: default_short_model(),
+            long_model: default_long_model(),
+            threshold: default_threshold(),
+        }
+    }
 }
 
 fn default_short_model() -> String {
     "gemini-2.5-flash-lite".to_string()
+}
+
+fn default_long_model() -> String {
+    "gemini-2.5-flash".to_string()
+}
+
+fn default_threshold() -> u32 {
+    200
 }
 
 #[derive(serde::Serialize)]
@@ -164,9 +184,14 @@ fn main() -> Result<()> {
         response_duration = Some(Instant::now());
     }
 
-    let model = config.diff.short_model;
+    let diff_config = config.diff;
+    let mut model = diff_config.short_model;
+    if diff_config.threshold > 500 {
+        model = diff_config.long_model;
+        info!("Using long model {model}")
+    }
+
     let completion = client.create_chat_completion(Chat {
-        // TODO: avoid using clone
         model: model.clone(),
         messages: vec![
             ChatMessage {
