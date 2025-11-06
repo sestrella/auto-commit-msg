@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use log::info;
 use regex::Regex;
 use reqwest::header;
@@ -176,6 +176,9 @@ fn main() -> Result<()> {
 
     let output = Command::new("git").args(["diff", "--cached"]).output()?;
     let diff = String::from_utf8(output.stdout)?;
+    if diff == "" {
+        bail!("`git diff --cached` is empty")
+    }
 
     let provider = config.provider;
     let base_url = reqwest::Url::parse(&provider.base_url)?;
