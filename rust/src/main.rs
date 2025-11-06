@@ -164,6 +164,8 @@ impl OpenAIClient {
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
+
     let execution_duration = Instant::now();
 
     let mut config_content = "".to_string();
@@ -203,8 +205,8 @@ fn main() -> Result<()> {
     let mut model = diff_config.short_model;
     if total_changes >= diff_config.threshold {
         model = diff_config.long_model;
-        info!("Using long model {model}")
     }
+    info!("Using model {model} for {total_changes}");
 
     let mut response_duration = None;
     if config.trace {
