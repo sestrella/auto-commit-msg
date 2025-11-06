@@ -26,7 +26,7 @@ fn default_trace() -> bool {
 }
 
 fn default_provider() -> ProviderConfig {
-    ProviderConfig                 {
+    ProviderConfig {
         base_url: default_base_url(),
         api_key: default_api_key(),
     }
@@ -107,6 +107,7 @@ impl serde::Serialize for TraceWrapper {
 
 #[derive(serde::Serialize)]
 struct Trace {
+    language: String,
     model: String,
     response_time: TraceDuration,
     execution_time: TraceDuration,
@@ -196,6 +197,7 @@ fn main() -> Result<()> {
     if let Some(bar) = response_time {
         commit_msg.push_str("\n---\n");
         commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {
+            language: "rust".to_string(),
             // TODO: avoid using clone
             model: model.clone(),
             response_time: TraceDuration(bar),
