@@ -73,6 +73,7 @@ impl Default for DiffConfig {
     }
 }
 
+// TODO: create default impls
 fn default_short_model() -> String {
     "gemini-2.5-flash-lite".to_string()
 }
@@ -189,20 +190,14 @@ fn main() -> Result<()> {
         .args(["diff", "--cached", "--shortstat"])
         .output()?;
     let stat = String::from_utf8(stat_output.stdout)?;
-    println!("{stat}");
-    // TODO: Fix regex
-    let re = Regex::new(
-        r"
-        (?:,\s+(?P<insertions>\d+)\s+insertions?\(\+\))?
-        (?:,\s+(?P<deletions>\d+)\s+deletions?\(-\))?
-    ",
-    )?;
 
     let mut insertions: u32 = 0;
+    if let Some(caps) = Regex::new(r"(\d+)\s+insertions?\(\+\)")?.captures(&stat) {
+        insertions = caps.get(1).unwrap().as_str().parse()?;
+    }
     let mut deletions: u32 = 0;
-    if let Some(caps) = re.captures(&stat) {
-        insertions = caps.name("insertions").unwrap().as_str().parse()?;
-        deletions = caps.name("deletions").unwrap().as_str().parse()?;
+    if let Some(caps) = Regex::new(r"(\d+)\s+deletions?\(\-\)")?.captures(&stat) {
+        deletions = caps.get(1).unwrap().as_str().parse()?;
     }
     let total_changes = insertions + deletions;
 
@@ -211,7 +206,7 @@ fn main() -> Result<()> {
     if total_changes >= diff_config.threshold {
         model = diff_config.long_model;
     }
-    info!("Using model {model} for {total_changes}");
+    info!("Total changes {total_changes} using model {model}");
 
     let mut response_duration = None;
     if config.trace {
