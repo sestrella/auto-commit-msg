@@ -177,7 +177,7 @@ fn main() -> Result<()> {
     let output = Command::new("git").args(["diff", "--cached"]).output()?;
     let diff = String::from_utf8(output.stdout)?;
     if diff == "" {
-        bail!("`git diff --cached` is empty")
+        bail!("`git diff --cached` output is empty")
     }
 
     let provider = config.provider;
@@ -189,6 +189,8 @@ fn main() -> Result<()> {
         .args(["diff", "--cached", "--shortstat"])
         .output()?;
     let stat = String::from_utf8(stat_output.stdout)?;
+    println!("{stat}");
+    // TODO: Fix regex
     let re = Regex::new(
         r"
         (?:,\s+(?P<insertions>\d+)\s+insertions?\(\+\))?
