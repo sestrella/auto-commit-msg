@@ -1,5 +1,6 @@
 use anyhow::Result;
 use log::info;
+use regex::Regex;
 use reqwest::header;
 use serde::ser::SerializeStruct;
 use std::default::Default;
@@ -171,7 +172,7 @@ fn main() -> Result<()> {
     }
     let config: Config = toml::from_str(&config_content)?;
 
-    let output = Command::new("git").arg("diff").arg("--cached").output()?;
+    let output = Command::new("git").args(["diff", "--cached"]).output()?;
     let diff = String::from_utf8(output.stdout)?;
 
     let provider = config.provider;
@@ -179,18 +180,36 @@ fn main() -> Result<()> {
     let token = std::env::var(&provider.api_key)?;
     let client = OpenAIClient::build(base_url, token)?;
 
-    let mut response_duration = None;
-    if config.trace {
-        response_duration = Some(Instant::now());
+    let stat_output = Command::new("git")
+        .args(["diff", "--cached", "--shortstat"])
+        .output()?;
+    let stat = String::from_utf8(stat_output.stdout)?;
+    let re = Regex::new(
+        r"
+        (?:,\s+(?P<insertions>\d+)\s+insertions?\(\+\))?
+        (?:,\s+(?P<deletions>\d+)\s+deletions?\(-\))?
+    ",
+    )?;
+
+    let mut insertions: u32 = 0;
+    let mut deletions: u32 = 0;
+    if let Some(caps) = re.captures(&stat) {
+        insertions = caps.name("insertions").unwrap().as_str().parse()?;
+        deletions = caps.name("deletions").unwrap().as_str().parse()?;
     }
+    let total_changes = insertions + deletions;
 
     let diff_config = config.diff;
     let mut model = diff_config.short_model;
-    if diff_config.threshold > 500 {
+    if total_changes >= diff_config.threshold {
         model = diff_config.long_model;
         info!("Using long model {model}")
     }
 
+    let mut response_duration = None;
+    if config.trace {
+        response_duration = Some(Instant::now());
+    }
     let completion = client.create_chat_completion(Chat {
         model: model.clone(),
         messages: vec![
