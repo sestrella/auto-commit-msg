@@ -26,7 +26,7 @@ fn default_trace() -> bool {
 }
 
 fn default_provider() -> ProviderConfig {
-    ProviderConfig{
+    ProviderConfig                 {
         base_url: default_base_url(),
         api_key: default_api_key(),
     }
@@ -153,8 +153,9 @@ fn main() -> Result<()> {
     let output = Command::new("git").arg("diff").arg("--cached").output()?;
     let diff = String::from_utf8(output.stdout)?;
 
-    let base_url = reqwest::Url::parse(&config.provider.base_url)?;
-    let token = std::env::var(&config.provider.api_key)?;
+    let provider = config.provider;
+    let base_url = reqwest::Url::parse(&provider.base_url)?;
+    let token = std::env::var(&provider.api_key)?;
     let client = OpenAIClient::build(base_url, token)?;
 
     let mut response_duration = None;
@@ -162,8 +163,10 @@ fn main() -> Result<()> {
         response_duration = Some(Instant::now());
     }
 
+    let model = config.diff.short_model;
     let completion = client.create_chat_completion(Chat {
-        model: config.diff.short_model,
+        // TODO: avoid using clone
+        model: model.clone(),
         messages: vec![
             ChatMessage {
                 role: "developer".to_string(),
@@ -193,7 +196,8 @@ fn main() -> Result<()> {
     if let Some(bar) = response_time {
         commit_msg.push_str("\n---\n");
         commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {
-            model: "gemini-2.5-flash-lite".to_string(),
+            // TODO: avoid using clone
+            model: model.clone(),
             response_time: TraceDuration(bar),
             execution_time: TraceDuration(execution_duration.elapsed()),
         }))?);
