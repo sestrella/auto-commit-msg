@@ -230,7 +230,7 @@ fn main() -> Result<()> {
             },
         ],
     })?;
-    let response_time = response_duration.map(|foo| foo.elapsed());
+    let response_time = response_duration.map(|duration| duration.elapsed());
 
     let messages: Vec<&ChoiceMessage> = completion
         .choices
@@ -239,22 +239,36 @@ fn main() -> Result<()> {
         .map(|choice| &choice.message)
         .collect();
     let message = messages.first().expect("at least one message is expected");
-    let mut commit_msg = message.content.clone();
-    if let Some(bar) = response_time {
-        commit_msg.push_str("\n---\n");
-        commit_msg.push_str(&serde_json::to_string(&TraceWrapper(Trace {
-            language: "rust".to_string(),
-            // TODO: avoid using clone
-            model: model.clone(),
-            response_time: TraceDuration(bar),
-            execution_time: TraceDuration(execution_duration.elapsed()),
-        }))?);
-    }
+    let commit_msg = &message.content;
 
-    if let Some(commit_msg_file) = env::args().nth(1) {
+    if let Some(ref commit_msg_file) = env::args().nth(1) {
         fs::write(commit_msg_file, commit_msg)?;
+        if config.trace {
+            let trace_info = serde_json::to_string(&TraceWrapper(Trace {
+                language: "rust".to_string(),
+                // TODO: avoid using clone
+                model: model.clone(),
+                response_time: TraceDuration(
+                    response_time.expect("expect response time not to be \"None\""),
+                ),
+                execution_time: TraceDuration(execution_duration.elapsed()),
+            }))?;
+            fs::write(commit_msg_file, format!("\n---\n{trace_info}"))?;
+        }
     } else {
-        println!("{commit_msg}");
+        print!("{commit_msg}");
+        if config.trace {
+            let trace_info = serde_json::to_string(&TraceWrapper(Trace {
+                language: "rust".to_string(),
+                // TODO: avoid using clone
+                model: model.clone(),
+                response_time: TraceDuration(
+                    response_time.expect("expect response time not to be \"None\""),
+                ),
+                execution_time: TraceDuration(execution_duration.elapsed()),
+            }))?;
+            print!("\n---\n{trace_info}");
+        }
     }
 
     Ok(())
