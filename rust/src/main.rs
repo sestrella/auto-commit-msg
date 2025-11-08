@@ -254,7 +254,12 @@ fn main() -> Result<()> {
 
     let mut out: Box<dyn Write>;
     if let Some(commit_msg_file) = env::args().nth(1) {
-        out = Box::new(File::options().truncate(true).open(commit_msg_file)?);
+        out = Box::new(
+            File::options()
+                .write(true)
+                .truncate(true)
+                .open(commit_msg_file)?,
+        );
     } else {
         out = Box::new(io::stdout());
     }
