@@ -260,13 +260,13 @@ fn main() -> Result<()> {
     }
 
     if config.trace {
+        commit_msg.push_str("\n---\n");
         let trace_info = serde_json::to_string(&TraceWrapper(Trace {
             language: "rust".to_string(),
             model,
             response_time: TraceDuration(response_time.expect("TODO")),
             execution_time: TraceDuration(execution_duration.expect("TODO").elapsed()),
         }))?;
-        commit_msg.push_str("\n---\n");
         commit_msg.push_str(&trace_info);
     }
     write!(out, "{commit_msg}")?;
