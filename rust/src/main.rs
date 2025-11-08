@@ -4,6 +4,8 @@ use regex::Regex;
 use reqwest::header;
 use serde::ser::SerializeStruct;
 use std::default::Default;
+use std::fs::File;
+use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 use std::time::{Duration, Instant};
@@ -167,16 +169,23 @@ impl OpenAIClient {
 fn main() -> Result<()> {
     env_logger::init();
 
-    let execution_duration = Instant::now();
-
     let mut config_content = "".to_string();
     if Path::new(".auto-commit-msg.toml").exists() {
         config_content = fs::read_to_string(".auto-commit-msg.toml")?;
     }
     let config: Config = toml::from_str(&config_content)?;
 
-    let output = Command::new("git").args(["diff", "--cached"]).output()?;
-    let diff = String::from_utf8(output.stdout)?;
+    let mut execution_duration = None;
+    if config.trace {
+        execution_duration = Some(Instant::now());
+    }
+
+    let diff = String::from_utf8(
+        Command::new("git")
+            .args(["diff", "--cached"])
+            .output()?
+            .stdout,
+    )?;
     if diff == "" {
         bail!("`git diff --cached` output is empty")
     }
@@ -186,10 +195,12 @@ fn main() -> Result<()> {
     let token = std::env::var(&provider.api_key)?;
     let client = OpenAIClient::build(base_url, token)?;
 
-    let stat_output = Command::new("git")
-        .args(["diff", "--cached", "--shortstat"])
-        .output()?;
-    let stat = String::from_utf8(stat_output.stdout)?;
+    let stat = String::from_utf8(
+        Command::new("git")
+            .args(["diff", "--cached", "--shortstat"])
+            .output()?
+            .stdout,
+    )?;
 
     let mut insertions: u32 = 0;
     if let Some(caps) = Regex::new(r"(\d+)\s+insertions?\(\+\)")?.captures(&stat) {
@@ -239,37 +250,26 @@ fn main() -> Result<()> {
         .map(|choice| &choice.message)
         .collect();
     let message = messages.first().expect("at least one message is expected");
-    let commit_msg = &message.content;
+    let mut commit_msg = message.content.clone();
 
-    if let Some(ref commit_msg_file) = env::args().nth(1) {
-        fs::write(commit_msg_file, commit_msg)?;
-        if config.trace {
-            let trace_info = serde_json::to_string(&TraceWrapper(Trace {
-                language: "rust".to_string(),
-                // TODO: avoid using clone
-                model: model.clone(),
-                response_time: TraceDuration(
-                    response_time.expect("expect response time not to be \"None\""),
-                ),
-                execution_time: TraceDuration(execution_duration.elapsed()),
-            }))?;
-            fs::write(commit_msg_file, format!("\n---\n{trace_info}"))?;
-        }
+    let mut out: Box<dyn Write>;
+    if let Some(commit_msg_file) = env::args().nth(1) {
+        out = Box::new(File::options().truncate(true).open(commit_msg_file)?);
     } else {
-        print!("{commit_msg}");
-        if config.trace {
-            let trace_info = serde_json::to_string(&TraceWrapper(Trace {
-                language: "rust".to_string(),
-                // TODO: avoid using clone
-                model: model.clone(),
-                response_time: TraceDuration(
-                    response_time.expect("expect response time not to be \"None\""),
-                ),
-                execution_time: TraceDuration(execution_duration.elapsed()),
-            }))?;
-            print!("\n---\n{trace_info}");
-        }
+        out = Box::new(io::stdout());
     }
+
+    if config.trace {
+        let trace_info = serde_json::to_string(&TraceWrapper(Trace {
+            language: "rust".to_string(),
+            model,
+            response_time: TraceDuration(response_time.expect("TODO")),
+            execution_time: TraceDuration(execution_duration.expect("TODO").elapsed()),
+        }))?;
+        commit_msg.push_str("\n---\n");
+        commit_msg.push_str(&trace_info);
+    }
+    write!(out, "{commit_msg}")?;
 
     Ok(())
 }
