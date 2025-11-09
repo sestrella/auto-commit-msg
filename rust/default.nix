@@ -21,9 +21,9 @@ rustPlatform.buildRustPackage {
     lockFile = ./Cargo.lock;
   };
 
-  nativeBuildInputs = [
-    pkgs.pkg-config
-  ];
+  buildInputs = [ pkgs.openssl ];
+
+  # nativeBuildInputs = [ pkgs.pkg-config ];
 
   meta.mainProgram = "acm";
 }
