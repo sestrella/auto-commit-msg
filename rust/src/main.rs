@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use std::{env, fs};
 
 struct OpenAIClient {
@@ -133,20 +133,8 @@ impl serde::Serialize for TraceWrapper {
 struct Trace {
     language: String,
     model: String,
-    response_time: TraceDuration,
-    execution_time: TraceDuration,
-}
-
-struct TraceDuration(Duration);
-
-impl serde::Serialize for TraceDuration {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let secs = self.0.as_secs_f64();
-        serializer.serialize_f64(secs)
-    }
+    response_time: f64,
+    execution_time: f64,
 }
 
 impl OpenAIClient {
@@ -269,8 +257,11 @@ fn main() -> Result<()> {
         let trace_info = serde_json::to_string(&TraceWrapper(Trace {
             language: "rust".to_string(),
             model,
-            response_time: TraceDuration(response_time.expect("TODO")),
-            execution_time: TraceDuration(execution_duration.expect("TODO").elapsed()),
+            response_time: response_time.expect("response time is None").as_secs_f64(),
+            execution_time: execution_duration
+                .expect("execution duration is None")
+                .elapsed()
+                .as_secs_f64(),
         }))?;
         commit_msg.push_str(&trace_info);
     }
