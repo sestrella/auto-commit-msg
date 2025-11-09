@@ -23,7 +23,7 @@ jobs:
           name: sestrella
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           skipPush: ${{ github.ref_name != 'main' }}
-      - run: nix build .#{{ matrix.package }}
+      - run: nix build .#${{ matrix.package }}
 
   template:
     runs-on: ubuntu-latest
