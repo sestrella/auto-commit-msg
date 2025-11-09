@@ -140,7 +140,9 @@ impl serde::Serialize for TraceWrapper {
 struct Trace {
     language: String,
     model: String,
+    // TODO: truncate to 2 decimals
     response_time: f64,
+    // TODO: truncate to 2 decimals
     execution_time: f64,
 }
 
