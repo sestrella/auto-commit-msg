@@ -5,20 +5,21 @@ use regex::Regex;
 use reqwest::header;
 use serde::ser::SerializeStruct;
 use std::default::Default;
+use std::fs;
 use std::fs::File;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 use std::time::Instant;
-use std::{env, fs};
 
 struct OpenAIClient {
     client: reqwest::blocking::Client,
     base_url: reqwest::Url,
 }
 
-#[derive(clap::Parser)]
+#[derive(Debug, clap::Parser)]
 struct Args {
+    commit_msg_file: Option<String>,
     #[arg(short, long, default_value = ".auto-commit-msg.toml")]
     config: String,
 }
@@ -255,9 +256,10 @@ fn main() -> Result<()> {
     let mut commit_msg = message.content.clone();
 
     let mut out: Box<dyn Write>;
-    if let Some(commit_msg_file) = env::args().nth(1) {
+    if let Some(commit_msg_file) = args.commit_msg_file {
         out = Box::new(
             File::options()
+                .create(true)
                 .write(true)
                 .truncate(true)
                 .open(commit_msg_file)?,
