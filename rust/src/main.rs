@@ -165,6 +165,8 @@ impl OpenAIClient {
 }
 
 fn main() -> Result<()> {
+    let execution_duration = Instant::now();
+
     env_logger::init();
 
     let args = Args::parse();
@@ -177,11 +179,6 @@ fn main() -> Result<()> {
     }
 
     let config: Config = toml::from_str(&config_content)?;
-
-    let mut execution_duration = None;
-    if config.trace {
-        execution_duration = Some(Instant::now());
-    }
 
     let diff = String::from_utf8(
         Command::new("git")
@@ -274,10 +271,7 @@ fn main() -> Result<()> {
             language: "rust".to_string(),
             model,
             response_time: response_time.expect("response time is None").as_secs_f64(),
-            execution_time: execution_duration
-                .expect("execution duration is None")
-                .elapsed()
-                .as_secs_f64(),
+            execution_time: execution_duration.elapsed().as_secs_f64(),
         }))?;
         commit_msg.push_str(&trace_info);
     }
