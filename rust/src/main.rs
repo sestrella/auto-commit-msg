@@ -12,12 +12,8 @@ use std::path::Path;
 use std::process::Command;
 use std::time::Instant;
 
-struct OpenAIClient {
-    client: reqwest::blocking::Client,
-    base_url: reqwest::Url,
-}
-
 #[derive(Debug, clap::Parser)]
+#[command(version)]
 struct Args {
     commit_msg_file: Option<String>,
     #[arg(short, long, default_value = ".auto-commit-msg.toml")]
@@ -83,7 +79,6 @@ impl Default for DiffConfig {
     }
 }
 
-// TODO: create default impls
 fn default_short_model() -> String {
     "gemini-2.5-flash-lite".to_string()
 }
@@ -94,6 +89,11 @@ fn default_long_model() -> String {
 
 fn default_threshold() -> u32 {
     200
+}
+
+struct OpenAIClient {
+    client: reqwest::blocking::Client,
+    base_url: reqwest::Url,
 }
 
 #[derive(serde::Serialize)]
