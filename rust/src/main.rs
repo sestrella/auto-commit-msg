@@ -199,7 +199,6 @@ fn main() -> Result<()> {
             .output()?
             .stdout,
     )?;
-
     let mut insertions: u32 = 0;
     if let Some(caps) = Regex::new(r"(\d+)\s+insertions?\(\+\)")?.captures(&stat) {
         insertions = caps.get(1).unwrap().as_str().parse()?;
