@@ -1,4 +1,5 @@
 use anyhow::{Result, bail};
+use clap::Parser;
 use log::info;
 use regex::Regex;
 use reqwest::header;
@@ -14,6 +15,12 @@ use std::{env, fs};
 struct OpenAIClient {
     client: reqwest::blocking::Client,
     base_url: reqwest::Url,
+}
+
+#[derive(clap::Parser)]
+struct Args {
+    #[arg(short, long, default_value = ".auto-commit-msg.toml")]
+    config: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -157,10 +164,15 @@ impl OpenAIClient {
 fn main() -> Result<()> {
     env_logger::init();
 
-    let mut config_content = "".to_string();
-    if Path::new(".auto-commit-msg.toml").exists() {
-        config_content = fs::read_to_string(".auto-commit-msg.toml")?;
+    let args = Args::parse();
+
+    let config_content: String;
+    if Path::new(&args.config).exists() {
+        config_content = fs::read_to_string(&args.config)?;
+    } else {
+        config_content = "".to_string();
     }
+
     let config: Config = toml::from_str(&config_content)?;
 
     let mut execution_duration = None;
