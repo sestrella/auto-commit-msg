@@ -141,9 +141,7 @@ impl serde::Serialize for TraceWrapper {
 struct Trace {
     language: String,
     model: String,
-    // TODO: truncate to 2 decimals
     response_time: f64,
-    // TODO: truncate to 2 decimals
     execution_time: f64,
 }
 
@@ -267,11 +265,13 @@ fn main() -> Result<()> {
 
     if config.trace {
         commit_msg.push_str("\n---\n");
+        let response_time_secs = response_time.expect("response time is None").as_secs_f64();
+        let execution_time_secs = execution_duration.elapsed().as_secs_f64();
         let trace_info = serde_json::to_string(&TraceWrapper(Trace {
             language: "rust".to_string(),
             model,
-            response_time: response_time.expect("response time is None").as_secs_f64(),
-            execution_time: execution_duration.elapsed().as_secs_f64(),
+            response_time: f64::trunc(response_time_secs * 100.0) / 100.0,
+            execution_time: f64::trunc(execution_time_secs * 100.0) / 100.0,
         }))?;
         commit_msg.push_str(&trace_info);
     }
