@@ -30,7 +30,6 @@ jobs:
       - run: nix run .#${{ matrix.package }} -- --version
 
   template:
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
