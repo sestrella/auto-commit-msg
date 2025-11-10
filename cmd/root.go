@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/sestrella/auto-commit-msg/internal/openai"
@@ -33,10 +34,14 @@ type DiffConfig struct {
 }
 
 type TraceInfo struct {
-	Version       string
-	Model         string
-	ResponseTime  time.Duration
-	ExecutionTime time.Duration
+	Language      string  `json:"language"`
+	Model         string  `json:"model"`
+	ResponseTime  float64 `json:"response_time"`
+	ExecutionTime float64 `json:"execution_time"`
+}
+
+type TraceWrapper struct {
+	Trace TraceInfo `json:"auto-commit-msg"`
 }
 
 var configFile string
@@ -161,12 +166,20 @@ var rootCmd = &cobra.Command{
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
 			executionDuration := time.Since(executionTime)
-			commitMsg = fmt.Sprintf("%s\n\nauto-commit-msg%+v", commitMsg, TraceInfo{
-				Version:       strings.TrimSpace(cmd.Version),
+			traceInfo := TraceInfo{
+				Language:      "go",
 				Model:         model,
-				ResponseTime:  responseDuration,
-				ExecutionTime: executionDuration,
-			})
+				ResponseTime:  math.Round(responseDuration.Seconds()*100) / 100,
+				ExecutionTime: math.Round(executionDuration.Seconds()*100) / 100,
+			}
+			traceWrapper := TraceWrapper{Trace: traceInfo}
+
+			traceJSON, err := json.Marshal(traceWrapper)
+			if err != nil {
+				cobra.CheckErr(err)
+			}
+
+			commitMsg = fmt.Sprintf("%s\n---\n%s", commitMsg, traceJSON)
 		}
 
 		if commitMsgFile == "" {
