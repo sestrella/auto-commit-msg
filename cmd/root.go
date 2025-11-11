@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sestrella/auto-commit-msg/internal/openai"
@@ -36,6 +37,7 @@ type DiffConfig struct {
 type Trace struct {
 	Language      string  `json:"language"`
 	Model         string  `json:"model"`
+	Version       string  `json:"version"`
 	ResponseTime  float64 `json:"response_time"`
 	ExecutionTime float64 `json:"execution_time"`
 }
@@ -169,6 +171,7 @@ var rootCmd = &cobra.Command{
 			trace := Trace{
 				Language:      "go",
 				Model:         model,
+				Version:       strings.TrimSpace(cmd.Version),
 				ResponseTime:  math.Round(responseDuration.Seconds()*100) / 100,
 				ExecutionTime: math.Round(executionDuration.Seconds()*100) / 100,
 			}
