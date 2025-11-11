@@ -35,6 +35,7 @@
         in
         {
           default = pkgs.callPackage ./default.nix { };
+          rust = pkgs.callPackage ./rust/default.nix { };
         }
       );
 
