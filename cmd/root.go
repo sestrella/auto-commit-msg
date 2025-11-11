@@ -33,7 +33,7 @@ type DiffConfig struct {
 	Threshold  int    `mapstructure:"threshold"`
 }
 
-type TraceInfo struct {
+type Trace struct {
 	Language      string  `json:"language"`
 	Model         string  `json:"model"`
 	ResponseTime  float64 `json:"response_time"`
@@ -41,7 +41,7 @@ type TraceInfo struct {
 }
 
 type TraceWrapper struct {
-	Trace TraceInfo `json:"auto-commit-msg"`
+	Trace Trace `json:"auto-commit-msg"`
 }
 
 var configFile string
@@ -166,13 +166,13 @@ var rootCmd = &cobra.Command{
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
 			executionDuration := time.Since(executionTime)
-			traceInfo := TraceInfo{
+			trace := Trace{
 				Language:      "go",
 				Model:         model,
 				ResponseTime:  math.Round(responseDuration.Seconds()*100) / 100,
 				ExecutionTime: math.Round(executionDuration.Seconds()*100) / 100,
 			}
-			traceWrapper := TraceWrapper{Trace: traceInfo}
+			traceWrapper := TraceWrapper{Trace: trace}
 
 			traceJSON, err := json.Marshal(traceWrapper)
 			if err != nil {
