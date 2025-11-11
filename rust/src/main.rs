@@ -140,6 +140,7 @@ impl serde::Serialize for TraceWrapper {
 #[derive(serde::Serialize)]
 struct Trace {
     language: String,
+    version: String,
     model: String,
     response_time: f64,
     execution_time: f64,
@@ -268,6 +269,7 @@ fn main() -> Result<()> {
         let execution_time_secs = execution_duration.elapsed().as_secs_f64();
         let trace_info = serde_json::to_string(&TraceWrapper(Trace {
             language: "rust".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
             model,
             response_time: f64::trunc(response_time_secs * 100.0) / 100.0,
             execution_time: f64::trunc(execution_time_secs * 100.0) / 100.0,
