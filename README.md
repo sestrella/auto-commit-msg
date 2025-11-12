@@ -22,6 +22,7 @@ system. Unzip the file and place the binary in a location available on your
 `PATH` environment variable.
 
 <details open>
+
 <summary>Instructions for non-Nix users</summary>
 
 ### pre-commit
@@ -29,7 +30,7 @@ system. Unzip the file and place the binary in a location available on your
 Add a `.pre-commit-config.yaml` file to your project's root directory with the
 following content:
 
-```yaml
+```yml
 - repo: local
   hooks:
     - id: auto-commit-msg
@@ -41,7 +42,8 @@ following content:
 
 </details>
 
-<details open>
+<details>
+
 <summary>Instructions for Nix users</summary>
 
 ### devenv
