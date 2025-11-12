@@ -11,6 +11,7 @@ devenv.local.nix
 # Project specific
 .env
 auto-commit-msg
+benchmark.md
 result
 templates/default/devenv.lock
 

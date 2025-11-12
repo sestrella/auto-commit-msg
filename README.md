@@ -109,6 +109,16 @@ commit` without a commit message generates a commit message. If a commit message
 is given, `auto-commit-msg` does not generate a commit message and instead uses
 the one provided by the user.
 
+## Benchmark
+
+The following table compares the Go and Rust implementations; it was built using
+[hyperfine](https://github.com/sharkdp/hyperfine).
+
+| Command | Mean [s] | Min [s] | Max [s] | Relative |
+|:---|---:|---:|---:|---:|
+| `./auto-commit-msg` | 1.101 ± 0.205 | 0.776 | 1.309 | 1.00 |
+| `./rust/target/release/acm` | 1.244 ± 0.106 | 1.127 | 1.416 | 1.13 ± 0.23 |
+
 ## License
 
 [MIT](LICENSE)

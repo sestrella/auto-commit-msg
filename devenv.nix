@@ -14,6 +14,7 @@
     pkgs.gitleaks
     pkgs.gomod2nix
     pkgs.goreleaser
+    pkgs.hyperfine
     pkgs.secretspec
   ];
 
