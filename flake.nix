@@ -32,9 +32,18 @@
               nix-filter.overlays.default
             ];
           };
+          lib = pkgs.lib;
         in
-        {
-          default = self.packages.${system}.go;
+        rec {
+          benchmark = pkgs.writeShellScriptBin "benchmark" ''
+            ${lib.getExe pkgs.hyperfine} \
+              --runs 5 \
+              --prepare 'sleep 1' \
+              --export-markdown benchmark.md \
+              ${lib.getExe go} \
+              ${lib.getExe rust}
+          '';
+          default = go;
           go = pkgs.callPackage ./default.nix { };
           rust = pkgs.callPackage ./rust/default.nix { };
         }
