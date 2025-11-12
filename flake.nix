@@ -34,7 +34,8 @@
           };
         in
         {
-          default = pkgs.callPackage ./default.nix { };
+          default = self.packages.${system}.go;
+          go = pkgs.callPackage ./default.nix { };
           rust = pkgs.callPackage ./rust/default.nix { };
         }
       );
