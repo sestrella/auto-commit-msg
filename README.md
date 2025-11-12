@@ -21,7 +21,27 @@ Download the precompiled binary from the [releases] page that matches your curre
 system. Unzip the file and place the binary in a location available on your
 `PATH` environment variable.
 
-<details>
+<details open>
+<summary>Instructions for non-Nix users</summary>
+
+### pre-commit
+
+Add a `.pre-commit-config.yaml` file to your project's root directory with the
+following content:
+
+```yaml
+- repo: local
+  hooks:
+    - id: auto-commit-msg
+      name: auto-commit-msg
+      entry: acm
+      language: system
+      stages: [prepare-commit-msg]
+```
+
+</details>
+
+<details open>
 <summary>Instructions for Nix users</summary>
 
 ### devenv
