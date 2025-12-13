@@ -97,15 +97,9 @@ var rootCmd = &cobra.Command{
 		var model string
 		if totalChanges < totalChangesThreshold {
 			model = config.Diff.ShortModel
-			if model == "" {
-				return errors.New("short_model cannot be empty")
-			}
 			log.Printf("git diff total changes %d under %d threshold, using model for short diffs: %s\n", totalChanges, totalChangesThreshold, model)
 		} else {
 			model = config.Diff.LongModel
-			if model == "" {
-				return errors.New("long_model cannot be empty")
-			}
 			log.Printf("git diff total changes %d over %d threshold, using model for long diffs: %s\n", totalChanges, totalChangesThreshold, model)
 		}
 		if config.Provider.ApiKey == "" {
@@ -228,5 +222,20 @@ func initConfig() {
 	}
 	if err := viper.Unmarshal(&config); err != nil {
 		cobra.CheckErr(err)
+	}
+
+	shortModel := config.Diff.ShortModel
+	if shortModel == "" {
+		cobra.CheckErr("diff.short_model cannot be empty")
+	}
+
+	longModel := config.Diff.LongModel
+	if longModel == "" {
+		cobra.CheckErr("diff.long_model cannot be empty")
+	}
+
+	threshold := config.Diff.Threshold
+	if threshold < 0 {
+		cobra.CheckErr("diff.threshold should be greater than 0")
 	}
 }
