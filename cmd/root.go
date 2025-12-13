@@ -93,14 +93,14 @@ var rootCmd = &cobra.Command{
 		}
 
 		totalChanges := stats.Insertions + stats.Deletions
-		totalChangesThreshold := config.Diff.Threshold
+		threshold := config.Diff.Threshold
 		var model string
-		if totalChanges < totalChangesThreshold {
+		if totalChanges < threshold {
 			model = config.Diff.ShortModel
-			log.Printf("git diff total changes %d under %d threshold, using model for short diffs: %s\n", totalChanges, totalChangesThreshold, model)
+			log.Printf("git diff total changes %d under %d threshold, using model for short diffs: %s\n", totalChanges, threshold, model)
 		} else {
 			model = config.Diff.LongModel
-			log.Printf("git diff total changes %d over %d threshold, using model for long diffs: %s\n", totalChanges, totalChangesThreshold, model)
+			log.Printf("git diff total changes %d over %d threshold, using model for long diffs: %s\n", totalChanges, threshold, model)
 		}
 		if config.Provider.ApiKey == "" {
 			return errors.New("api_key environment variable name cannot be empty")
