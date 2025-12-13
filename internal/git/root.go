@@ -28,7 +28,7 @@ func DiffCachedStats() (*Stats, error) {
 		return nil, err
 	}
 
-	re := regexp.MustCompile(`\s+(\d+)\s+files? changed,\s+(\d+)\s+insertions\(\+\),\s+(\d+)\s+deletions\(\-\)`)
+	re := regexp.MustCompile(`\s+(\d+)\s+files? changed,\s+(\d+)\s+insertions?\(\+\),\s+(\d+)\s+deletions?\(\-\)`)
 	matches := re.FindStringSubmatch(string(output))
 	if len(matches) < 4 {
 		return nil, errors.New("TODO")
