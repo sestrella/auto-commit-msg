@@ -148,21 +148,20 @@ var rootCmd = &cobra.Command{
 		commitMsg := res.Choices[0].Message.Content
 		if config.Trace {
 			executionDuration := time.Since(executionTime)
-			trace := Trace{
-				Language:      "go",
-				Model:         model,
-				Version:       strings.TrimSpace(cmd.Version),
-				ResponseTime:  math.Round(responseDuration.Seconds()*100) / 100,
-				ExecutionTime: math.Round(executionDuration.Seconds()*100) / 100,
-			}
-			traceWrapper := TraceWrapper{Trace: trace}
-
-			traceJSON, err := json.Marshal(traceWrapper)
+			trace, err := json.Marshal(TraceWrapper{
+				Trace: Trace{
+					Language:      "go",
+					Model:         model,
+					Version:       strings.TrimSpace(cmd.Version),
+					ResponseTime:  math.Round(responseDuration.Seconds()*100) / 100,
+					ExecutionTime: math.Round(executionDuration.Seconds()*100) / 100,
+				},
+			})
 			if err != nil {
 				return err
 			}
 
-			commitMsg = fmt.Sprintf("%s\n---\n%s", commitMsg, traceJSON)
+			commitMsg = fmt.Sprintf("%s\n---\n%s", commitMsg, trace)
 		}
 
 		if commitMsgFile == "" {
