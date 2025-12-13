@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -51,7 +52,7 @@ var config Config
 var rootCmd = &cobra.Command{
 	Use:   "auto-commit-msg COMMIT_MSG_FILE",
 	Short: "Generates a commit message from a git diff using AI",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		var executionTime time.Time
 		if config.Trace {
 			executionTime = time.Now()
@@ -73,21 +74,21 @@ var rootCmd = &cobra.Command{
 		}
 		if commitSource != "" {
 			log.Printf("Commit source '%s' is not empty, skipping commit message generation\n", commitSource)
-			return
+			return nil
 		}
 
 		cachedGitDiff, err := git.DiffCached()
 		if err != nil {
-			cobra.CheckErr(err)
+			return err
 		}
 
 		if cachedGitDiff == "" {
-			cobra.CheckErr("git diff is empty")
+			return errors.New("git diff is empty")
 		}
 
 		stats, err := git.DiffCachedStats()
 		if err != nil {
-			cobra.CheckErr(err)
+			return err
 		}
 
 		totalChanges := stats.Insertions + stats.Deletions
@@ -96,26 +97,26 @@ var rootCmd = &cobra.Command{
 		if totalChanges < totalChangesThreshold {
 			model = config.Diff.ShortModel
 			if model == "" {
-				cobra.CheckErr("short_model cannot be empty")
+				return errors.New("short_model cannot be empty")
 			}
 			log.Printf("git diff total changes %d under %d threshold, using model for short diffs: %s\n", totalChanges, totalChangesThreshold, model)
 		} else {
 			model = config.Diff.LongModel
 			if model == "" {
-				cobra.CheckErr("long_model cannot be empty")
+				return errors.New("long_model cannot be empty")
 			}
 			log.Printf("git diff total changes %d over %d threshold, using model for long diffs: %s\n", totalChanges, totalChangesThreshold, model)
 		}
 		if config.Provider.ApiKey == "" {
-			cobra.CheckErr("api_key environment variable name cannot be empty")
+			return errors.New("api_key environment variable name cannot be empty")
 		}
 
 		apiKey := os.Getenv(config.Provider.ApiKey)
 		if apiKey == "" {
-			cobra.CheckErr(fmt.Sprintf("environment variable %s is required", config.Provider.ApiKey))
+			return fmt.Errorf("environment variable %s is required", config.Provider.ApiKey)
 		}
 		if config.Provider.BaseUrl == "" {
-			cobra.CheckErr("base_url cannot be empty")
+			return errors.New("base_url cannot be empty")
 		}
 
 		client := openai.NewClient(config.Provider.BaseUrl, apiKey)
@@ -138,10 +139,10 @@ var rootCmd = &cobra.Command{
 			responseDuration = time.Since(responseTime)
 		}
 		if err != nil {
-			cobra.CheckErr(err)
+			return err
 		}
 		if len(res.Choices) == 0 {
-			cobra.CheckErr(fmt.Sprintf("expects response to include at least one choice: %+v", res))
+			return fmt.Errorf("expects response to include at least one choice: %+v", res)
 		}
 
 		commitMsg := res.Choices[0].Message.Content
@@ -158,7 +159,7 @@ var rootCmd = &cobra.Command{
 
 			traceJSON, err := json.Marshal(traceWrapper)
 			if err != nil {
-				cobra.CheckErr(err)
+				return err
 			}
 
 			commitMsg = fmt.Sprintf("%s\n---\n%s", commitMsg, traceJSON)
@@ -169,9 +170,11 @@ var rootCmd = &cobra.Command{
 		} else {
 			err = os.WriteFile(commitMsgFile, []byte(commitMsg), 0644)
 			if err != nil {
-				cobra.CheckErr(err)
+				return err
 			}
 		}
+
+		return nil
 	},
 }
 
