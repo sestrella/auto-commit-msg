@@ -6,12 +6,10 @@ import (
 	"log"
 	"math"
 	"os"
-	"os/exec"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/sestrella/auto-commit-msg/internal/git"
 	"github.com/sestrella/auto-commit-msg/internal/openai"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -78,40 +76,21 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		gitDiff, err := exec.Command("git", "diff", "--cached").Output()
+		cachedGitDiff, err := git.DiffCached()
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-		if len(gitDiff) == 0 {
+
+		if cachedGitDiff == "" {
 			cobra.CheckErr("git diff is empty")
 		}
 
-		shortStat, err := exec.Command("git", "diff", "--cached", "--shortstat").Output()
+		stats, err := git.DiffCachedStats()
 		if err != nil {
 			cobra.CheckErr(err)
 		}
-		shortStatStr := string(shortStat)
 
-		// TODO: Get insertions and deletions using a single regex, take into account num of files?
-		insertionMatches := regexp.MustCompile(`(\d+)\s+insertions?\(\+\)`).FindStringSubmatch(shortStatStr)
-		insertions := 0
-		if len(insertionMatches) > 1 {
-			insertions, err = strconv.Atoi(insertionMatches[1])
-			if err != nil {
-				cobra.CheckErr(err)
-			}
-		}
-
-		deletionMatches := regexp.MustCompile(`(\d+)\s+deletions?\(\-\)`).FindStringSubmatch(shortStatStr)
-		deletions := 0
-		if len(deletionMatches) > 1 {
-			deletions, err = strconv.Atoi(deletionMatches[1])
-			if err != nil {
-				cobra.CheckErr(err)
-			}
-		}
-
-		totalChanges := insertions + deletions
+		totalChanges := stats.Insertions + stats.Deletions
 		totalChangesThreshold := config.Diff.Threshold
 		var model string
 		if totalChanges < totalChangesThreshold {
@@ -151,7 +130,7 @@ var rootCmd = &cobra.Command{
 			},
 			{
 				Role:    "user",
-				Content: string(gitDiff),
+				Content: cachedGitDiff,
 			},
 		})
 		var responseDuration time.Duration
