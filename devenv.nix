@@ -6,7 +6,6 @@
 }:
 
 {
-  env.GEMINI_API_KEY = config.secretspec.secrets.GEMINI_API_KEY or "";
   env.ACM_API_KEY = config.secretspec.secrets.GEMINI_API_KEY or "";
 
   packages = [
