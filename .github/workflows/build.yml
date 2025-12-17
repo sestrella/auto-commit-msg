@@ -14,9 +14,6 @@ jobs:
         os:
           - macos-latest
           - ubuntu-latest
-        package:
-          - go
-          - rust
       fail-fast: true
     steps:
       - uses: actions/checkout@v5
@@ -26,8 +23,8 @@ jobs:
           name: sestrella
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           skipPush: ${{ github.ref_name != 'main' }}
-      - run: nix build .#${{ matrix.package }}
-      - run: nix run .#${{ matrix.package }} -- --version
+      - run: nix build .#
+      - run: nix run .# -- --version
 
   template:
     runs-on: ubuntu-latest
