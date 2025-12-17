@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -17,20 +16,12 @@ import (
 )
 
 type Config struct {
-	Trace    bool           `mapstructure:"trace"`
-	Provider ProviderConfig `mapstructure:"provider"`
-	Diff     DiffConfig     `mapstructure:"diff"`
-}
-
-type ProviderConfig struct {
-	BaseUrl string `mapstructure:"base_url"`
-	ApiKey  string `mapstructure:"api_key"`
-}
-
-type DiffConfig struct {
+	Trace      bool   `mapstructure:"trace"`
+	BaseUrl    string `mapstructure:"base_url"`
+	ApiKey     string `mapstructure:"api_key"`
+	Threshold  int    `mapstructure:"threshold"`
 	ShortModel string `mapstructure:"short_model"`
 	LongModel  string `mapstructure:"long_model"`
-	Threshold  int    `mapstructure:"threshold"`
 }
 
 type Trace struct {
@@ -91,28 +82,17 @@ var rootCmd = &cobra.Command{
 		}
 
 		totalChanges := stats.Insertions + stats.Deletions
-		threshold := config.Diff.Threshold
+		threshold := config.Threshold
 		var model string
 		if totalChanges < threshold {
-			model = config.Diff.ShortModel
+			model = config.ShortModel
 			log.Printf("git diff total changes %d under %d threshold, using model for short diffs: %s\n", totalChanges, threshold, model)
 		} else {
-			model = config.Diff.LongModel
+			model = config.LongModel
 			log.Printf("git diff total changes %d over %d threshold, using model for long diffs: %s\n", totalChanges, threshold, model)
 		}
-		if config.Provider.ApiKey == "" {
-			return errors.New("api_key environment variable name cannot be empty")
-		}
 
-		apiKey := os.Getenv(config.Provider.ApiKey)
-		if apiKey == "" {
-			return fmt.Errorf("environment variable %s is required", config.Provider.ApiKey)
-		}
-		if config.Provider.BaseUrl == "" {
-			return errors.New("base_url cannot be empty")
-		}
-
-		client := openai.NewClient(config.Provider.BaseUrl, apiKey)
+		client := openai.NewClient(config.BaseUrl, config.ApiKey)
 		var responseTime time.Time
 		if config.Trace {
 			responseTime = time.Now()
@@ -206,11 +186,13 @@ func initConfig() {
 	}
 
 	viper.SetDefault("trace", false)
-	viper.SetDefault("provider.base_url", "https://generativelanguage.googleapis.com/v1beta/openai")
-	viper.SetDefault("provider.api_key", "GEMINI_API_KEY")
-	viper.SetDefault("diff.short_model", "gemini-2.5-flash-lite")
-	viper.SetDefault("diff.long_model", "gemini-2.5-flash")
-	viper.SetDefault("diff.threshold", 200)
+	viper.SetDefault("base_url", "https://generativelanguage.googleapis.com/v1beta/openai")
+	viper.SetDefault("api_key", "")
+	viper.SetDefault("threshold", 200)
+	viper.SetDefault("short_model", "gemini-2.5-flash-lite")
+	viper.SetDefault("long_model", "gemini-2.5-flash")
+
+	viper.SetEnvPrefix("acm")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
@@ -221,18 +203,23 @@ func initConfig() {
 		cobra.CheckErr(err)
 	}
 
-	shortModel := config.Diff.ShortModel
-	if shortModel == "" {
-		cobra.CheckErr("diff.short_model cannot be empty")
+	if config.BaseUrl == "" {
+		cobra.CheckErr("base_url cannot be empty")
 	}
 
-	longModel := config.Diff.LongModel
-	if longModel == "" {
-		cobra.CheckErr("diff.long_model cannot be empty")
+	if config.ApiKey == "" {
+		cobra.CheckErr("api_key cannot be empty")
 	}
 
-	threshold := config.Diff.Threshold
-	if threshold < 0 {
-		cobra.CheckErr("diff.threshold should be greater than 0")
+	if config.Threshold < 0 {
+		cobra.CheckErr("threshold should be greater than 0")
+	}
+
+	if config.ShortModel == "" {
+		cobra.CheckErr("short_model cannot be empty")
+	}
+
+	if config.LongModel == "" {
+		cobra.CheckErr("long_model cannot be empty")
 	}
 }
