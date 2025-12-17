@@ -22,7 +22,7 @@
 
   git-hooks.hooks.auto-commit-msg = {
     enable = true;
-    entry = lib.getExe (pkgs.callPackage ./rust/default.nix { });
+    entry = lib.getExe (pkgs.callPackage ./default.nix { });
     stages = [ "prepare-commit-msg" ];
     verbose = true;
   };

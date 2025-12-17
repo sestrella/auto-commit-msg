@@ -12,4 +12,3 @@ inputs:
 secretspec:
   enable: true
   provider: keyring
-  profile: development
