@@ -1,7 +1,6 @@
 package git
 
 import (
-	"errors"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -28,23 +27,21 @@ func DiffCachedStats() (*Stats, error) {
 		return nil, err
 	}
 
-	re := regexp.MustCompile(`\s+(\d+)\s+files? changed,\s+(\d+)\s+insertions?\(\+\),\s+(\d+)\s+deletions?\(\-\)`)
-	matches := re.FindStringSubmatch(string(output))
-	if len(matches) < 4 {
-		return nil, errors.New("TODO")
-	}
+	return parseDiffStats(string(output))
+}
 
-	fileChanged, err := strconv.Atoi(matches[1])
+func parseDiffStats(output string) (*Stats, error) {
+	fileChanged, err := parseInt(output, `(\d+)\sfiles? changed`)
 	if err != nil {
 		return nil, err
 	}
 
-	insertions, err := strconv.Atoi(matches[2])
+	insertions, err := parseInt(output, `(\d+)\sinsertions?\(\+\)`)
 	if err != nil {
 		return nil, err
 	}
 
-	deletions, err := strconv.Atoi(matches[3])
+	deletions, err := parseInt(output, `(\d+)\sdeletions?\(\-\)`)
 	if err != nil {
 		return nil, err
 	}
@@ -54,4 +51,18 @@ func DiffCachedStats() (*Stats, error) {
 		Insertions:  insertions,
 		Deletions:   deletions,
 	}, nil
+}
+
+func parseInt(str string, re string) (int, error) {
+	matches := regexp.MustCompile(re).FindStringSubmatch(str)
+	if len(matches) != 2 {
+		return 0, nil
+	}
+
+	value, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, err
+	}
+
+	return value, nil
 }
