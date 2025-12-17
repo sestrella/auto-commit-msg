@@ -7,6 +7,7 @@
 pkgs.buildGoApplication {
   pname = "auto-commit-msg";
   version = lib.trim (builtins.readFile ./version.txt);
+
   src = nix-filter {
     root = ./.;
     include = [
@@ -18,10 +19,16 @@ pkgs.buildGoApplication {
       ./version.txt
     ];
   };
+
   modules = ./gomod2nix.toml;
+
+  postInstall = ''
+    mv $out/bin/auto-commit-msg $out/bin/acm
+  '';
+
   meta = {
     description = "Generates a commit message from a git diff using AI";
     license = lib.licenses.mit;
-    mainProgram = "auto-commit-msg";
+    mainProgram = "acm";
   };
 }
