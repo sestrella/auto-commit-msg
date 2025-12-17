@@ -34,7 +34,6 @@ type DiffConfig struct {
 }
 
 type Trace struct {
-	Language      string  `json:"language"`
 	Model         string  `json:"model"`
 	Version       string  `json:"version"`
 	ResponseTime  float64 `json:"response_time"`
@@ -145,7 +144,6 @@ var rootCmd = &cobra.Command{
 			executionDuration := time.Since(executionTime)
 			trace, err := json.Marshal(TraceWrapper{
 				Trace: Trace{
-					Language:      "go",
 					Model:         model,
 					Version:       strings.TrimSpace(cmd.Version),
 					ResponseTime:  math.Round(responseDuration.Seconds()*100) / 100,
