@@ -81,7 +81,6 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
 		if cachedGitDiff == "" {
 			return nil
 		}
