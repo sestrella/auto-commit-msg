@@ -84,7 +84,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if cachedGitDiff == "" {
-			return errors.New("git diff is empty")
+			return nil
 		}
 
 		stats, err := git.DiffCachedStats()
